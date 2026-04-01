@@ -708,7 +708,7 @@
           <div class="card" style="overflow:hidden;">
             <table class="data-table">
               <thead><tr>
-                <th>Nome</th><th>Email</th><th>Nível</th><th>Estado</th><th style="width:80px;"></th>
+                <th>Nome</th><th>Email</th><th>Password</th><th>Nível</th><th>Estado</th><th style="width:80px;"></th>
               </tr></thead>
               <tbody id="utilizadores-tbody"></tbody>
             </table>
@@ -1232,6 +1232,11 @@
           </select>
         </div>
         <div class="form-group" style="grid-column:1/-1;">
+          <label>Password</label>
+          <input id="util-password" type="password" placeholder="••••••••" autocomplete="new-password">
+          <div id="util-password-hint" style="font-size:11px;color:var(--muted);margin-top:4px;display:none;">Deixa em branco para manter a password atual</div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
           <label>Notas</label>
           <textarea id="util-notas" rows="2" placeholder="Observações sobre o acesso…"></textarea>
         </div>
@@ -1386,11 +1391,11 @@ const _maps = {
   utilizadores: {
     toDb: u => ({
       id: u.id, nome: u.nome, email: u.email, nivel: u.nivel || 'Visualizador',
-      ativo: u.ativo || 'Ativo', notas: u.notas || null,
+      ativo: u.ativo || 'Ativo', notas: u.notas || null, password: u.password || null,
     }),
     fromDb: r => ({
       id: r.id, nome: r.nome, email: r.email, nivel: r.nivel || 'Visualizador',
-      ativo: r.ativo || 'Ativo', notas: r.notas || '',
+      ativo: r.ativo || 'Ativo', notas: r.notas || '', password: r.password || '',
     }),
   },
 };
@@ -2856,9 +2861,11 @@ function renderUtilizadoresDef() {
   tbody.innerHTML = users.map(u => {
     const nivelColor = u.nivel === 'Admin' ? 'var(--brand)' : u.nivel === 'Editor' ? 'var(--warning)' : 'var(--muted)';
     const ativoColor = u.ativo === 'Ativo' ? 'var(--success)' : 'var(--danger)';
+    const pwdDisplay = u.password ? `<span style="letter-spacing:0.1em;color:var(--muted);">••••••</span>` : `<span style="color:var(--muted);font-size:11px;">—</span>`;
     return `<tr>
       <td style="font-weight:600;">${esc(u.nome)}</td>
       <td style="color:var(--muted);">${esc(u.email)}</td>
+      <td>${pwdDisplay}</td>
       <td><span style="color:${nivelColor};font-weight:600;font-size:12px;">${esc(u.nivel)}</span></td>
       <td><span style="color:${ativoColor};font-size:12px;font-weight:600;">${esc(u.ativo)}</span></td>
       <td>
@@ -2878,7 +2885,9 @@ function openNovoUtilizador() {
   document.getElementById('util-email').value = '';
   document.getElementById('util-nivel').value = 'Admin';
   document.getElementById('util-ativo').value = 'Ativo';
+  document.getElementById('util-password').value = '';
   document.getElementById('util-notas').value = '';
+  document.getElementById('util-password-hint').style.display = 'none';
   openModal('modal-utilizador');
 }
 
@@ -2891,7 +2900,9 @@ function editUtilizador(id) {
   document.getElementById('util-email').value = u.email;
   document.getElementById('util-nivel').value = u.nivel;
   document.getElementById('util-ativo').value = u.ativo;
+  document.getElementById('util-password').value = '';
   document.getElementById('util-notas').value = u.notas;
+  document.getElementById('util-password-hint').style.display = '';
   openModal('modal-utilizador');
 }
 
@@ -2899,12 +2910,15 @@ async function saveUtilizador() {
   const nome = document.getElementById('util-nome').value.trim();
   const email = document.getElementById('util-email').value.trim();
   if (!nome || !email) { showToast('⚠️ Nome e email são obrigatórios'); return; }
+  const newPassword = document.getElementById('util-password').value;
+  const existingUser = editingId.utilizador ? DB.get('utilizadores').find(x => x.id === editingId.utilizador) : null;
   const item = {
     id: editingId.utilizador ?? Date.now(),
     nome, email,
     nivel: document.getElementById('util-nivel').value,
     ativo: document.getElementById('util-ativo').value,
     notas: document.getElementById('util-notas').value.trim(),
+    password: newPassword || (existingUser?.password ?? ''),
   };
   await DB.upsert('utilizadores', item);
   closeModal('modal-utilizador');

@@ -128,6 +128,7 @@ create table if not exists public.utilizadores (
   email         text not null,
   nivel         text default 'Visualizador',
   ativo         text default 'Ativo',
+  password      text,
   notas         text,
   created_at    timestamptz default now()
 );
