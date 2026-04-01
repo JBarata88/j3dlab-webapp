@@ -6,6 +6,7 @@
 <title>J3D Lab PT — Gestão de Impressão 3D</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -985,13 +986,162 @@
   </div>
 </div>
 
+<div id="app-loading" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px;">
+  <img src="logos/Logo_horizontal_branco.png" style="max-width:160px;opacity:0.9;" onerror="this.style.display='none'">
+  <p style="color:var(--muted);font-size:13px;font-family:'Inter',sans-serif;">A ligar ao Supabase...</p>
+  <div style="width:36px;height:36px;border:3px solid rgba(255,107,43,0.2);border-top-color:var(--brand);border-radius:50%;animation:sb-spin 0.8s linear infinite;"></div>
+</div>
+<style>@keyframes sb-spin { to { transform:rotate(360deg); } }</style>
+
 <script>
+// ===================== SUPABASE CONFIG =====================
+// Preenche com os teus dados do projeto Supabase:
+// Dashboard → Project Settings → API
+const SUPABASE_URL = 'https://lvvgmtfripzyhytiylxx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2dmdtdGZyaXB6eWh5dGl5bHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNzc0MjAsImV4cCI6MjA5MDY1MzQyMH0.Kv4vSz4QtXbWcMdsP8IOlYIqhcy6oCWpibqcPijPNAQ';
+
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===================== FIELD MAPPERS (camelCase JS ↔ snake_case DB) =====================
+const _maps = {
+  orcamentos: {
+    toDb: o => ({
+      id: o.id, nome: o.nome, cliente: o.cliente || null, material: o.material,
+      impressora_id: o.impressoraId ? String(o.impressoraId) : null,
+      peso: parseFloat(o.peso) || null, tempo: parseFloat(o.tempo) || null,
+      eletrico: parseFloat(o.eletrico) || null, margem: parseFloat(o.margem) || null,
+      filamento_preco: parseFloat(o.filamentoPreco) || null,
+      qualidade: parseFloat(o.qualidade) || null, estado: o.estado,
+      notas: o.notas || null, preco: parseFloat(o.preco) || null, data: o.data,
+    }),
+    fromDb: r => ({
+      id: r.id, nome: r.nome, cliente: r.cliente || '', material: r.material || 'PLA',
+      impressoraId: r.impressora_id || '', peso: r.peso?.toString() || '',
+      tempo: r.tempo?.toString() || '', eletrico: r.eletrico?.toString() || '0.15',
+      margem: r.margem?.toString() || '30', filamentoPreco: r.filamento_preco?.toString() || '20',
+      qualidade: r.qualidade?.toString() || '1.1', estado: r.estado || 'Pendente',
+      notas: r.notas || '', preco: r.preco?.toString() || '0', data: r.data || new Date().toISOString(),
+    }),
+  },
+  trabalhos: {
+    toDb: t => ({ orcamento_id: t.orcamentoId, status: t.status, venda_id: t.vendaId || null }),
+    fromDb: r => ({ orcamentoId: r.orcamento_id, status: r.status || 'Para Imprimir', vendaId: r.venda_id || null }),
+  },
+  vendas: {
+    toDb: v => ({
+      id: v.id, data: v.data, produto: v.produto, categoria: v.categoria, material: v.material,
+      qtd: parseFloat(v.qtd) || 1, custo_unit: parseFloat(v.custoUnit) || 0,
+      custo_total: parseFloat(v.custoTotal) || 0, preco: parseFloat(v.preco) || 0,
+      receita: parseFloat(v.receita) || 0, lucro: parseFloat(v.lucro) || 0,
+      margem: parseFloat(v.margem) || 0, notas: v.notas || null,
+    }),
+    fromDb: r => ({
+      id: r.id, data: r.data, produto: r.produto, categoria: r.categoria || 'Funcional',
+      material: r.material || 'PLA', qtd: r.qtd || 1, custoUnit: r.custo_unit || 0,
+      custoTotal: r.custo_total || 0, preco: r.preco || 0, receita: r.receita || 0,
+      lucro: r.lucro || 0, margem: r.margem || 0, notas: r.notas || '',
+    }),
+  },
+  filamentos: {
+    toDb: f => ({
+      id: f.id, marca: f.marca, material: f.material, cor_nome: f.corNome || null,
+      cor_hex: f.corHex || '#ffffff', peso_total: parseFloat(f.pesoTotal) || 1000,
+      peso_restante: parseFloat(f.pesoRestante) || 1000, preco: parseFloat(f.preco) || null,
+      diametro: f.diametro || '1.75mm', temp_bico: f.tempBico || null,
+      temp_cama: f.tempCama || null, estado: f.estado || 'Disponível', localizacao: f.localizacao || null,
+    }),
+    fromDb: r => ({
+      id: r.id, marca: r.marca, material: r.material || 'PLA', corNome: r.cor_nome || '',
+      corHex: r.cor_hex || '#ffffff', pesoTotal: r.peso_total || 1000,
+      pesoRestante: r.peso_restante || 1000, preco: r.preco?.toString() || '',
+      diametro: r.diametro || '1.75mm', tempBico: r.temp_bico || '', tempCama: r.temp_cama || '',
+      estado: r.estado || 'Disponível', localizacao: r.localizacao || '',
+    }),
+  },
+  impressoras: {
+    toDb: i => ({
+      id: i.id, nome: i.nome, marca: i.marca || null, tipo: i.tipo || 'FDM',
+      estado: i.estado || 'Disponível', movimento: i.movimento || null, enclosure: i.enclosure || null,
+      vol_x: parseFloat(i.volX) || null, vol_y: parseFloat(i.volY) || null, vol_z: parseFloat(i.volZ) || null,
+      velocidade: parseFloat(i.velocidade) || null, max_temp: parseFloat(i.maxTemp) || null,
+      preco: parseFloat(i.preco) || null, w_print: parseFloat(i.wPrint) || null,
+      w_standby: parseFloat(i.wStandby) || null, w_max: parseFloat(i.wMax) || null,
+      horas: parseFloat(i.horas) || 0, custo_hora: parseFloat(i.custoHora) || 0.15,
+      descricao: i.descricao || null, notas: i.notas || null,
+    }),
+    fromDb: r => ({
+      id: r.id, nome: r.nome, marca: r.marca || '', tipo: r.tipo || 'FDM',
+      estado: r.estado || 'Disponível', movimento: r.movimento || '', enclosure: r.enclosure || '',
+      volX: r.vol_x?.toString() || '', volY: r.vol_y?.toString() || '', volZ: r.vol_z?.toString() || '',
+      velocidade: r.velocidade?.toString() || '', maxTemp: r.max_temp?.toString() || '',
+      preco: r.preco?.toString() || '', wPrint: r.w_print?.toString() || '',
+      wStandby: r.w_standby?.toString() || '', wMax: r.w_max?.toString() || '',
+      horas: r.horas?.toString() || '0', custoHora: r.custo_hora?.toString() || '0.15',
+      descricao: r.descricao || '', notas: r.notas || '',
+    }),
+  },
+  catalogo: {
+    toDb: c => ({
+      id: c.id, sku: c.sku || null, nome: c.nome, categoria: c.categoria || null,
+      material: c.material || null, custo_material: parseFloat(c.custoMaterial) || null,
+      custo_mao_obra: parseFloat(c.custoMaoObra) || null, embalagem: parseFloat(c.embalagem) || null,
+      custo_total: parseFloat(c.custoTotal) || null, preco_sugerido: parseFloat(c.precoSugerido) || null,
+      margem_sugerida: parseFloat(c.margemSugerida) || null,
+    }),
+    fromDb: r => ({
+      id: r.id, sku: r.sku || '', nome: r.nome, categoria: r.categoria || '',
+      material: r.material || '', custoMaterial: r.custo_material || 0,
+      custoMaoObra: r.custo_mao_obra || 0, embalagem: r.embalagem || 0,
+      custoTotal: r.custo_total || 0, precoSugerido: r.preco_sugerido || 0,
+      margemSugerida: r.margem_sugerida || 0,
+    }),
+  },
+};
+
 // ===================== DATA STORE =====================
 const DB = {
-  get(key) {
-    try { return JSON.parse(localStorage.getItem('j3d_' + key) || '[]'); } catch { return []; }
+  _cache: { orcamentos: [], trabalhos: [], vendas: [], filamentos: [], impressoras: [], catalogo: [] },
+
+  get(key) { return [...(this._cache[key] || [])]; },
+
+  async upsert(collection, item) {
+    const isPk = collection === 'trabalhos' ? 'orcamentoId' : 'id';
+    const cache = this._cache[collection];
+    const idx = cache.findIndex(x => x[isPk] === item[isPk]);
+    if (idx >= 0) cache[idx] = item; else cache.push(item);
+    const pkCol = collection === 'trabalhos' ? 'orcamento_id' : 'id';
+    const { error } = await _sb.from(collection).upsert(_maps[collection].toDb(item), { onConflict: pkCol });
+    if (error) { console.error('Supabase upsert error:', error); showToast('⚠️ Erro ao guardar no Supabase'); }
   },
-  set(key, val) { localStorage.setItem('j3d_' + key, JSON.stringify(val)); },
+
+  async delete(collection, id) {
+    const isPk = collection === 'trabalhos' ? 'orcamentoId' : 'id';
+    const pkCol = collection === 'trabalhos' ? 'orcamento_id' : 'id';
+    this._cache[collection] = this._cache[collection].filter(x => x[isPk] !== id);
+    const { error } = await _sb.from(collection).delete().eq(pkCol, id);
+    if (error) { console.error('Supabase delete error:', error); showToast('⚠️ Erro ao eliminar no Supabase'); }
+  },
+
+  async bulkReplace(collection, items) {
+    this._cache[collection] = items;
+    const { error: delErr } = await _sb.from(collection).delete().gte('id', 0);
+    if (delErr) { console.error('Supabase bulk delete error:', delErr); }
+    if (items.length) {
+      const rows = items.map(item => _maps[collection].toDb(item));
+      const { error } = await _sb.from(collection).insert(rows);
+      if (error) { console.error('Supabase bulk insert error:', error); showToast('⚠️ Erro ao importar para Supabase'); }
+    }
+  },
+
+  async loadAll() {
+    const collections = ['orcamentos', 'trabalhos', 'vendas', 'filamentos', 'impressoras', 'catalogo'];
+    await Promise.all(collections.map(async col => {
+      const orderCol = col === 'trabalhos' ? 'orcamento_id' : 'id';
+      const { data, error } = await _sb.from(col).select('*').order(orderCol, { ascending: true });
+      if (error) { console.error('Supabase load error:', col, error); return; }
+      this._cache[col] = (data || []).map(row => _maps[col].fromDb(row));
+    }));
+  },
 };
 
 let editingId = { orcamento: null, filamento: null, impressora: null, venda: null };
@@ -1065,13 +1215,13 @@ function populateImpressorasSelect() {
     impressoras.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
 }
 
-function saveOrcamento() {
+async function saveOrcamento() {
   const nome = document.getElementById('orc-nome').value.trim();
   const cliente = document.getElementById('orc-cliente').value.trim();
   if (!nome) { showToast('⚠️ Insere o nome da peça'); return; }
 
   const preco = calcOrcamento();
-  const orcamentos = DB.get('orcamentos');
+  const existingData = editingId.orcamento ? DB.get('orcamentos').find(o => o.id === editingId.orcamento) : null;
   const item = {
     id: editingId.orcamento || Date.now(),
     nome, cliente,
@@ -1086,16 +1236,10 @@ function saveOrcamento() {
     estado: document.getElementById('orc-estado').value,
     notas: document.getElementById('orc-notas').value,
     preco: preco.toFixed(2),
-    data: editingId.orcamento ? (orcamentos.find(o => o.id === editingId.orcamento)?.data || new Date().toISOString()) : new Date().toISOString(),
+    data: existingData?.data || new Date().toISOString(),
   };
 
-  if (editingId.orcamento) {
-    const idx = orcamentos.findIndex(o => o.id === editingId.orcamento);
-    orcamentos[idx] = item;
-  } else {
-    orcamentos.unshift(item);
-  }
-  DB.set('orcamentos', orcamentos);
+  await DB.upsert('orcamentos', item);
   closeModal('modal-orcamento');
   resetOrcamentoForm();
   renderOrcamentos();
@@ -1179,12 +1323,11 @@ function renderOrcamentos() {
 }
 
 // ===================== FILAMENTOS =====================
-function saveFilamento() {
+async function saveFilamento() {
   const marca = document.getElementById('fil-marca').value.trim();
   const material = document.getElementById('fil-material').value;
   if (!marca) { showToast('⚠️ Insere a marca do filamento'); return; }
 
-  const filamentos = DB.get('filamentos');
   const pesoTotal = parseFloat(document.getElementById('fil-peso-total').value) || 1000;
   const pesoRestante = parseFloat(document.getElementById('fil-peso-restante').value) || 1000;
 
@@ -1203,13 +1346,7 @@ function saveFilamento() {
     localizacao: document.getElementById('fil-localizacao').value,
   };
 
-  if (editingId.filamento) {
-    const idx = filamentos.findIndex(f => f.id === editingId.filamento);
-    filamentos[idx] = item;
-  } else {
-    filamentos.push(item);
-  }
-  DB.set('filamentos', filamentos);
+  await DB.upsert('filamentos', item);
   closeModal('modal-filamento');
   resetFilamentoForm();
   renderFilamentos();
@@ -1293,11 +1430,10 @@ function renderFilamentos() {
 }
 
 // ===================== IMPRESSORAS =====================
-function saveImpressora() {
+async function saveImpressora() {
   const nome = document.getElementById('imp-nome').value.trim();
   if (!nome) { showToast('⚠️ Insere o nome da impressora'); return; }
 
-  const impressoras = DB.get('impressoras');
   const item = {
     id: editingId.impressora || Date.now(),
     nome,
@@ -1321,13 +1457,7 @@ function saveImpressora() {
     notas: document.getElementById('imp-notas').value,
   };
 
-  if (editingId.impressora) {
-    const idx = impressoras.findIndex(i => i.id === editingId.impressora);
-    impressoras[idx] = item;
-  } else {
-    impressoras.push(item);
-  }
-  DB.set('impressoras', impressoras);
+  await DB.upsert('impressoras', item);
   closeModal('modal-impressora');
   resetImpressoraForm();
   renderImpressoras();
@@ -1619,9 +1749,12 @@ function addFromCatalog(catalogId) {
 // ===================== DELETE =====================
 function confirmDelete(collection, id) {
   openModal('modal-delete');
-  document.getElementById('confirm-delete-btn').onclick = () => {
-    const data = DB.get(collection).filter(x => x.id !== id);
-    DB.set(collection, data);
+  document.getElementById('confirm-delete-btn').onclick = async () => {
+    await DB.delete(collection, id);
+    // If deleting an orcamento, also clean up the trabalho from cache
+    if (collection === 'orcamentos') {
+      DB._cache['trabalhos'] = DB._cache['trabalhos'].filter(t => t.orcamentoId !== id);
+    }
     closeModal('modal-delete');
     if (collection === 'orcamentos') renderOrcamentos();
     if (collection === 'vendas') renderVendas();
@@ -1726,20 +1859,18 @@ function renderTrabalhos() {
   const orcamentos = DB.get('orcamentos').filter(o => o.estado === 'Aceite');
   const trabalhos = DB.get('trabalhos');
 
-  // Ensure every accepted quote has a trabalho entry
-  let changed = false;
+  // Ensure every accepted quote has a trabalho entry (sync to Supabase in background)
   orcamentos.forEach(o => {
     if (!trabalhos.find(t => t.orcamentoId === o.id)) {
-      trabalhos.push({ orcamentoId: o.id, status: 'Para Imprimir', vendaId: null });
-      changed = true;
+      const entry = { orcamentoId: o.id, status: 'Para Imprimir', vendaId: null };
+      DB._cache['trabalhos'].push(entry);
+      DB.upsert('trabalhos', entry);
     }
   });
-  if (changed) DB.set('trabalhos', trabalhos);
 
-  // Remove orphaned trabalho entries (quote no longer Aceite)
+  // Remove orphaned trabalho entries (quote no longer Aceite) — cache only, Supabase cleans on reload
   const aceiteIds = new Set(orcamentos.map(o => o.id));
   const cleanTrabalhos = trabalhos.filter(t => aceiteIds.has(t.orcamentoId));
-  if (cleanTrabalhos.length !== trabalhos.length) DB.set('trabalhos', cleanTrabalhos);
 
   // Build joined list
   let data = orcamentos.map(o => ({
@@ -1813,13 +1944,13 @@ function renderTrabalhos() {
   updateTrabalhosSummary(cleanTrabalhos);
 }
 
-function updateTrabalhoStatus(orcamentoId, newStatus) {
+async function updateTrabalhoStatus(orcamentoId, newStatus) {
   const trabalhos = DB.get('trabalhos');
   const idx = trabalhos.findIndex(t => t.orcamentoId === orcamentoId);
   if (idx === -1) return;
 
   const old = trabalhos[idx];
-  trabalhos[idx] = { ...old, status: newStatus };
+  const updated = { ...old, status: newStatus };
 
   // Auto-create venda when marked Concluído (only once)
   if (newStatus === 'Concluído' && !old.vendaId) {
@@ -1845,15 +1976,13 @@ function updateTrabalhoStatus(orcamentoId, newStatus) {
         margem: margemReal,
         notas: orc.cliente || '',
       };
-      const vendas = DB.get('vendas');
-      vendas.push(venda);
-      DB.set('vendas', vendas);
-      trabalhos[idx].vendaId = vendaId;
+      await DB.upsert('vendas', venda);
+      updated.vendaId = vendaId;
       showToast('✅ Trabalho concluído — venda criada automaticamente!');
     }
   }
 
-  DB.set('trabalhos', trabalhos);
+  await DB.upsert('trabalhos', updated);
   renderTrabalhos();
   renderDashboard();
 }
@@ -1924,7 +2053,7 @@ function calcVenda() {
   document.getElementById('vcr-margem').style.color = margem >= 40 ? 'var(--success)' : margem >= 20 ? 'var(--brand)' : 'var(--danger)';
 }
 
-function saveVenda() {
+async function saveVenda() {
   const produto = document.getElementById('venda-produto').value.trim();
   if (!produto) { showToast('⚠️ Insere o nome do produto'); return; }
   const preco = parseFloat(document.getElementById('venda-preco').value);
@@ -1935,7 +2064,6 @@ function saveVenda() {
   const receita = preco * qtd;
   const lucro = receita - custoTotal;
   const margem = receita > 0 ? (lucro / receita) * 100 : 0;
-  const vendas = DB.get('vendas');
   const item = {
     id: editingId.venda || Date.now(),
     data: document.getElementById('venda-data').value,
@@ -1945,13 +2073,7 @@ function saveVenda() {
     qtd, custoUnit, custoTotal, preco, receita, lucro, margem,
     notas: document.getElementById('venda-notas').value,
   };
-  if (editingId.venda) {
-    const idx = vendas.findIndex(v => v.id === editingId.venda);
-    vendas[idx] = item;
-  } else {
-    vendas.push(item);
-  }
-  DB.set('vendas', vendas);
+  await DB.upsert('vendas', item);
   closeModal('modal-venda');
   renderVendas();
   renderDashboard();
@@ -2125,7 +2247,7 @@ function importExcel(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
       const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
 
@@ -2150,7 +2272,7 @@ function importExcel(input) {
             ? rawDate.toISOString().substring(0, 10)
             : (typeof rawDate === 'string' ? rawDate.substring(0, 10) : '');
           vendas.push({
-            id: Date.now() + i + Math.random(),
+            id: Math.floor(Date.now() + i * 7 + Math.random() * 1000),
             data: dateStr,
             produto: String(produto),
             categoria: String(row[5] || ''),
@@ -2159,7 +2281,7 @@ function importExcel(input) {
             notas: String(row[14] || ''),
           });
         }
-        DB.set('vendas', vendas);
+        await DB.bulkReplace('vendas', vendas);
         showToast('✅ ' + vendas.length + ' vendas importadas!');
       }
 
@@ -2172,6 +2294,7 @@ function importExcel(input) {
           const row = rows2[i];
           if (!row[2] || String(row[2]).startsWith('💡')) continue;
           catalogo.push({
+            id: Date.now() + i,
             sku: String(row[2]),
             nome: String(row[3]),
             categoria: String(row[4]),
@@ -2184,7 +2307,7 @@ function importExcel(input) {
             margemSugerida: parseFloat(row[11]) || 0,
           });
         }
-        if (catalogo.length) DB.set('catalogo', catalogo);
+        if (catalogo.length) await DB.bulkReplace('catalogo', catalogo);
       }
 
       renderVendas();
@@ -2256,8 +2379,18 @@ function fmtDate(iso) {
 }
 
 // ===================== INIT =====================
-calcOrcamento();
-renderDashboard();
+async function initApp() {
+  try {
+    await DB.loadAll();
+  } catch (err) {
+    console.error('Supabase load failed:', err);
+    showToast('⚠️ Erro ao conectar ao Supabase — verifica as credenciais');
+  }
+  document.getElementById('app-loading').style.display = 'none';
+  calcOrcamento();
+  renderDashboard();
+}
+initApp();
 </script>
 </body>
 </html>
