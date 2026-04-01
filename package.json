@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "puppeteer-core": "^24.40.0"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}
