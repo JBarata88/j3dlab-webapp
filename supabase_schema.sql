@@ -109,6 +109,29 @@ create table if not exists public.catalogo (
   created_at      timestamptz default now()
 );
 
+-- CLIENTES (Carteira de clientes)
+create table if not exists public.clientes (
+  id            bigint primary key,
+  nome          text not null,
+  email         text,
+  telefone      text,
+  nif           text,
+  morada        text,
+  notas         text,
+  created_at    timestamptz default now()
+);
+
+-- UTILIZADORES (Acesso ao sistema de gestão)
+create table if not exists public.utilizadores (
+  id            bigint primary key,
+  nome          text not null,
+  email         text not null,
+  nivel         text default 'Visualizador',
+  ativo         text default 'Ativo',
+  notas         text,
+  created_at    timestamptz default now()
+);
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- Esta app é uma ferramenta interna de utilizador único.
@@ -121,11 +144,15 @@ alter table public.vendas      enable row level security;
 alter table public.filamentos  enable row level security;
 alter table public.impressoras enable row level security;
 alter table public.catalogo    enable row level security;
+alter table public.clientes    enable row level security;
+alter table public.utilizadores enable row level security;
 
 -- Política: permitir tudo para utilizadores anónimos (ferramenta interna)
-create policy "Allow all orcamentos"  on public.orcamentos  for all using (true) with check (true);
-create policy "Allow all trabalhos"   on public.trabalhos   for all using (true) with check (true);
-create policy "Allow all vendas"      on public.vendas      for all using (true) with check (true);
-create policy "Allow all filamentos"  on public.filamentos  for all using (true) with check (true);
-create policy "Allow all impressoras" on public.impressoras for all using (true) with check (true);
-create policy "Allow all catalogo"    on public.catalogo    for all using (true) with check (true);
+create policy "Allow all orcamentos"   on public.orcamentos   for all using (true) with check (true);
+create policy "Allow all trabalhos"    on public.trabalhos    for all using (true) with check (true);
+create policy "Allow all vendas"       on public.vendas       for all using (true) with check (true);
+create policy "Allow all filamentos"   on public.filamentos   for all using (true) with check (true);
+create policy "Allow all impressoras"  on public.impressoras  for all using (true) with check (true);
+create policy "Allow all catalogo"     on public.catalogo     for all using (true) with check (true);
+create policy "Allow all clientes"     on public.clientes     for all using (true) with check (true);
+create policy "Allow all utilizadores" on public.utilizadores for all using (true) with check (true);

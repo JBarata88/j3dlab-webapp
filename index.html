@@ -67,6 +67,19 @@
   .nav-item svg { flex-shrink: 0; opacity: 0.7; }
   .nav-item.active svg { opacity: 1; }
 
+  /* Definições tabs */
+  .def-tab {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 16px; font-size: 13px; font-weight: 500;
+    color: var(--muted); background: transparent; border: none;
+    border-radius: 7px; cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .def-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .def-tab.active { color: var(--text); background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  .def-tab svg { opacity: 0.7; }
+  .def-tab.active svg { opacity: 1; }
+
   /* Main */
   #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   #topbar {
@@ -298,6 +311,12 @@
     <div class="nav-item" data-page="impressoras" onclick="navigate(this)">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/><line x1="6" y1="11" x2="8" y2="11"/></svg>
       Impressoras
+    </div>
+
+    <div class="sidebar-section-label">Sistema</div>
+    <div class="nav-item" data-page="definicoes" onclick="navigate(this)">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Definições
     </div>
   </nav>
 
@@ -601,6 +620,103 @@
           </div>
           <p style="color:var(--muted);font-size:12px;margin-bottom:20px;">Fonte: <a href="https://impressao3d.surf/" target="_blank" style="color:var(--brand);text-decoration:none;">impressao3d.surf</a> · Cálculo consumo: (W ÷ 1000) × €/kWh</p>
           <div id="catalog-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;"></div>
+        </div>
+      </div>
+
+      <!-- DEFINIÇÕES PAGE -->
+      <div id="page-definicoes" class="page">
+        <!-- Tab bar -->
+        <div style="display:flex;gap:4px;margin-bottom:28px;background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;">
+          <button class="def-tab active" data-tab="clientes" onclick="switchDefTab(this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Clientes
+          </button>
+          <button class="def-tab" data-tab="catalogo" onclick="switchDefTab(this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            Catálogo
+          </button>
+          <button class="def-tab" data-tab="utilizadores" onclick="switchDefTab(this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Utilizadores
+          </button>
+        </div>
+
+        <!-- CLIENTES TAB -->
+        <div id="def-tab-clientes" class="def-tab-content">
+          <div class="section-header">
+            <div>
+              <h3>Clientes</h3>
+              <p style="color:var(--muted);font-size:13px;margin-top:4px;">Gere a tua carteira de clientes</p>
+            </div>
+            <button class="btn btn-primary" onclick="openNovoCliente()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo Cliente
+            </button>
+          </div>
+          <div class="card" style="overflow:hidden;">
+            <table class="data-table">
+              <thead><tr>
+                <th>Nome</th><th>Email</th><th>Telefone</th><th>NIF</th><th>Notas</th><th style="width:80px;"></th>
+              </tr></thead>
+              <tbody id="clientes-tbody"></tbody>
+            </table>
+            <div id="clientes-empty" class="empty-state" style="display:none;padding:32px 24px;">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <p>Sem clientes ainda. Adiciona o primeiro!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATÁLOGO TAB -->
+        <div id="def-tab-catalogo" class="def-tab-content" style="display:none;">
+          <div class="section-header">
+            <div>
+              <h3>Catálogo de Produtos</h3>
+              <p style="color:var(--muted);font-size:13px;margin-top:4px;">Produtos disponíveis para venda · usado como autocomplete nas vendas</p>
+            </div>
+            <button class="btn btn-primary" onclick="openNovoProduto()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo Produto
+            </button>
+          </div>
+          <div class="card" style="overflow:hidden;">
+            <table class="data-table">
+              <thead><tr>
+                <th>SKU</th><th>Nome</th><th>Categoria</th><th>Material</th><th style="text-align:right;">Custo</th><th style="text-align:right;">Preço</th><th style="text-align:right;">Margem</th><th style="width:80px;"></th>
+              </tr></thead>
+              <tbody id="catalogo-def-tbody"></tbody>
+            </table>
+            <div id="catalogo-def-empty" class="empty-state" style="display:none;padding:32px 24px;">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
+              <p>Catálogo vazio. Adiciona o primeiro produto!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- UTILIZADORES TAB -->
+        <div id="def-tab-utilizadores" class="def-tab-content" style="display:none;">
+          <div class="section-header">
+            <div>
+              <h3>Utilizadores</h3>
+              <p style="color:var(--muted);font-size:13px;margin-top:4px;">Acesso ao sistema de gestão</p>
+            </div>
+            <button class="btn btn-primary" onclick="openNovoUtilizador()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo Utilizador
+            </button>
+          </div>
+          <div class="card" style="overflow:hidden;">
+            <table class="data-table">
+              <thead><tr>
+                <th>Nome</th><th>Email</th><th>Nível</th><th>Estado</th><th style="width:80px;"></th>
+              </tr></thead>
+              <tbody id="utilizadores-tbody"></tbody>
+            </table>
+            <div id="utilizadores-empty" class="empty-state" style="display:none;padding:32px 24px;">
+              <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <p>Sem utilizadores ainda. Adiciona o primeiro!</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -967,6 +1083,167 @@
   </div>
 </div>
 
+<!-- MODAL: CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <h3 id="modal-cliente-title">Novo Cliente</h3>
+      <button class="modal-close" onclick="closeModal('modal-cliente')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Nome *</label>
+          <input id="cli-nome" type="text" placeholder="Nome do cliente">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input id="cli-email" type="email" placeholder="email@exemplo.com">
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input id="cli-telefone" type="text" placeholder="+351 000 000 000">
+        </div>
+        <div class="form-group">
+          <label>NIF</label>
+          <input id="cli-nif" type="text" placeholder="000000000">
+        </div>
+        <div class="form-group">
+          <label>Morada</label>
+          <input id="cli-morada" type="text" placeholder="Rua, cidade">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Notas</label>
+          <textarea id="cli-notas" rows="2" placeholder="Observações sobre o cliente…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCliente()">Guardar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PRODUTO (CATÁLOGO) -->
+<div class="modal-overlay" id="modal-produto">
+  <div class="modal" style="width:560px;">
+    <div class="modal-header">
+      <h3 id="modal-produto-title">Novo Produto</h3>
+      <button class="modal-close" onclick="closeModal('modal-produto')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group">
+          <label>SKU</label>
+          <input id="prod-sku" type="text" placeholder="J3D-001">
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="prod-categoria">
+            <option value="">Selecionar…</option>
+            <option>Funcional</option><option>Decorativo</option><option>Brinquedo</option>
+            <option>Peça Técnica</option><option>Personalizado</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Nome *</label>
+          <input id="prod-nome" type="text" placeholder="Nome do produto">
+        </div>
+        <div class="form-group">
+          <label>Material</label>
+          <select id="prod-material">
+            <option value="">Selecionar…</option>
+            <option>PLA</option><option>PETG</option><option>ABS</option><option>TPU</option>
+            <option>ASA</option><option>Nylon</option><option>PC</option><option>Resina</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Custo Material (€)</label>
+          <input id="prod-custo-material" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
+        </div>
+        <div class="form-group">
+          <label>Custo Mão de Obra (€)</label>
+          <input id="prod-custo-mao-obra" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
+        </div>
+        <div class="form-group">
+          <label>Embalagem (€)</label>
+          <input id="prod-embalagem" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
+        </div>
+        <div class="form-group">
+          <label>Preço Sugerido (€)</label>
+          <input id="prod-preco-sugerido" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;gap:32px;margin-top:4px;">
+        <div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;">Custo Total</div>
+          <div id="prod-cr-custo" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--danger);">€0.00</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;">Margem Sugerida</div>
+          <div id="prod-cr-margem" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--brand);">0.0%</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-produto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduto()">Guardar Produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: UTILIZADOR -->
+<div class="modal-overlay" id="modal-utilizador">
+  <div class="modal" style="width:460px;">
+    <div class="modal-header">
+      <h3 id="modal-utilizador-title">Novo Utilizador</h3>
+      <button class="modal-close" onclick="closeModal('modal-utilizador')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Nome *</label>
+          <input id="util-nome" type="text" placeholder="Nome do utilizador">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Email *</label>
+          <input id="util-email" type="email" placeholder="email@exemplo.com">
+        </div>
+        <div class="form-group">
+          <label>Nível de Acesso</label>
+          <select id="util-nivel">
+            <option value="Admin">Admin</option>
+            <option value="Editor">Editor</option>
+            <option value="Visualizador">Visualizador</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="util-ativo">
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Notas</label>
+          <textarea id="util-notas" rows="2" placeholder="Observações sobre o acesso…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-utilizador')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUtilizador()">Guardar Utilizador</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: CONFIRM DELETE -->
 <div class="modal-overlay" id="modal-delete">
   <div class="modal" style="width:380px;">
@@ -1096,11 +1373,31 @@ const _maps = {
       margemSugerida: r.margem_sugerida || 0,
     }),
   },
+  clientes: {
+    toDb: c => ({
+      id: c.id, nome: c.nome, email: c.email || null, telefone: c.telefone || null,
+      nif: c.nif || null, morada: c.morada || null, notas: c.notas || null,
+    }),
+    fromDb: r => ({
+      id: r.id, nome: r.nome, email: r.email || '', telefone: r.telefone || '',
+      nif: r.nif || '', morada: r.morada || '', notas: r.notas || '',
+    }),
+  },
+  utilizadores: {
+    toDb: u => ({
+      id: u.id, nome: u.nome, email: u.email, nivel: u.nivel || 'Visualizador',
+      ativo: u.ativo || 'Ativo', notas: u.notas || null,
+    }),
+    fromDb: r => ({
+      id: r.id, nome: r.nome, email: r.email, nivel: r.nivel || 'Visualizador',
+      ativo: r.ativo || 'Ativo', notas: r.notas || '',
+    }),
+  },
 };
 
 // ===================== DATA STORE =====================
 const DB = {
-  _cache: { orcamentos: [], trabalhos: [], vendas: [], filamentos: [], impressoras: [], catalogo: [] },
+  _cache: { orcamentos: [], trabalhos: [], vendas: [], filamentos: [], impressoras: [], catalogo: [], clientes: [], utilizadores: [] },
 
   get(key) { return [...(this._cache[key] || [])]; },
 
@@ -1134,7 +1431,7 @@ const DB = {
   },
 
   async loadAll() {
-    const collections = ['orcamentos', 'trabalhos', 'vendas', 'filamentos', 'impressoras', 'catalogo'];
+    const collections = ['orcamentos', 'trabalhos', 'vendas', 'filamentos', 'impressoras', 'catalogo', 'clientes', 'utilizadores'];
     await Promise.all(collections.map(async col => {
       const orderCol = col === 'trabalhos' ? 'orcamento_id' : 'id';
       const { data, error } = await _sb.from(col).select('*').order(orderCol, { ascending: true });
@@ -1144,7 +1441,7 @@ const DB = {
   },
 };
 
-let editingId = { orcamento: null, filamento: null, impressora: null, venda: null };
+let editingId = { orcamento: null, filamento: null, impressora: null, venda: null, cliente: null, produto: null, utilizador: null };
 
 // ===================== NAVIGATION =====================
 function navigate(el) {
@@ -1153,7 +1450,7 @@ function navigate(el) {
   const page = el.dataset.page;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  const titles = { dashboard: 'Dashboard', orcamentos: 'Orçamentos', trabalhos: 'Trabalhos de Impressão', vendas: 'Registo de Vendas', filamentos: 'Filamentos', impressoras: 'Impressoras 3D' };
+  const titles = { dashboard: 'Dashboard', orcamentos: 'Orçamentos', trabalhos: 'Trabalhos de Impressão', vendas: 'Registo de Vendas', filamentos: 'Filamentos', impressoras: 'Impressoras 3D', definicoes: 'Definições' };
   document.getElementById('page-title').textContent = titles[page] || page;
   if (page === 'dashboard') renderDashboard();
   if (page === 'orcamentos') { populateImpressorasSelect(); renderOrcamentos(); }
@@ -1161,6 +1458,7 @@ function navigate(el) {
   if (page === 'vendas') renderVendas();
   if (page === 'filamentos') renderFilamentos();
   if (page === 'impressoras') { renderImpressoras(); renderCatalog(); }
+  if (page === 'definicoes') renderDefinicoes();
 }
 
 // ===================== MODAL =====================
@@ -2364,6 +2662,266 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wbOut, ws3, 'Resumo por Categoria');
   XLSX.writeFile(wbOut, 'J3D_Lab_PT_Registo_Vendas.xlsx');
   showToast('✅ Excel exportado com sucesso!');
+}
+
+// ===================== DEFINIÇÕES =====================
+
+function switchDefTab(btn) {
+  document.querySelectorAll('.def-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const tab = btn.dataset.tab;
+  document.querySelectorAll('.def-tab-content').forEach(c => c.style.display = 'none');
+  document.getElementById('def-tab-' + tab).style.display = '';
+}
+
+function renderDefinicoes() {
+  renderClientesDef();
+  renderCatalogoDef();
+  renderUtilizadoresDef();
+}
+
+// ---- CLIENTES ----
+function renderClientesDef() {
+  const clientes = DB.get('clientes');
+  const tbody = document.getElementById('clientes-tbody');
+  const empty = document.getElementById('clientes-empty');
+  if (!clientes.length) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = clientes.map(c => `
+    <tr>
+      <td style="font-weight:600;">${esc(c.nome)}</td>
+      <td style="color:var(--muted);">${esc(c.email)}</td>
+      <td style="color:var(--muted);">${esc(c.telefone)}</td>
+      <td style="color:var(--muted);">${esc(c.nif)}</td>
+      <td style="color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(c.notas)}</td>
+      <td>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="editCliente(${c.id})">Editar</button>
+          <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="confirmDeleteItem('clientes',${c.id},renderClientesDef)">Eliminar</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function openNovoCliente() {
+  editingId.cliente = null;
+  document.getElementById('modal-cliente-title').textContent = 'Novo Cliente';
+  ['nome','email','telefone','nif','morada','notas'].forEach(f => document.getElementById('cli-' + f).value = '');
+  openModal('modal-cliente');
+}
+
+function editCliente(id) {
+  const c = DB.get('clientes').find(x => x.id === id);
+  if (!c) return;
+  editingId.cliente = id;
+  document.getElementById('modal-cliente-title').textContent = 'Editar Cliente';
+  document.getElementById('cli-nome').value = c.nome;
+  document.getElementById('cli-email').value = c.email;
+  document.getElementById('cli-telefone').value = c.telefone;
+  document.getElementById('cli-nif').value = c.nif;
+  document.getElementById('cli-morada').value = c.morada;
+  document.getElementById('cli-notas').value = c.notas;
+  openModal('modal-cliente');
+}
+
+async function saveCliente() {
+  const nome = document.getElementById('cli-nome').value.trim();
+  if (!nome) { showToast('⚠️ Nome do cliente é obrigatório'); return; }
+  const item = {
+    id: editingId.cliente ?? Date.now(),
+    nome,
+    email: document.getElementById('cli-email').value.trim(),
+    telefone: document.getElementById('cli-telefone').value.trim(),
+    nif: document.getElementById('cli-nif').value.trim(),
+    morada: document.getElementById('cli-morada').value.trim(),
+    notas: document.getElementById('cli-notas').value.trim(),
+  };
+  await DB.upsert('clientes', item);
+  closeModal('modal-cliente');
+  renderClientesDef();
+  showToast(editingId.cliente ? '✅ Cliente atualizado' : '✅ Cliente adicionado');
+  editingId.cliente = null;
+}
+
+// ---- CATÁLOGO ----
+function renderCatalogoDef() {
+  const items = DB.get('catalogo');
+  const tbody = document.getElementById('catalogo-def-tbody');
+  const empty = document.getElementById('catalogo-def-empty');
+  if (!items.length) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = items.map(c => `
+    <tr>
+      <td style="color:var(--muted);font-size:12px;">${esc(c.sku)}</td>
+      <td style="font-weight:600;">${esc(c.nome)}</td>
+      <td><span class="badge">${esc(c.categoria)}</span></td>
+      <td style="color:var(--muted);">${esc(c.material)}</td>
+      <td style="text-align:right;color:var(--danger);">€${(+c.custoTotal||0).toFixed(2)}</td>
+      <td style="text-align:right;color:var(--success);">€${(+c.precoSugerido||0).toFixed(2)}</td>
+      <td style="text-align:right;color:var(--brand);">${(+c.margemSugerida||0).toFixed(1)}%</td>
+      <td>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="editProduto(${c.id})">Editar</button>
+          <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="confirmDeleteItem('catalogo',${c.id},renderCatalogoDef)">Eliminar</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function calcProduto() {
+  const mat = parseFloat(document.getElementById('prod-custo-material').value) || 0;
+  const mao = parseFloat(document.getElementById('prod-custo-mao-obra').value) || 0;
+  const emb = parseFloat(document.getElementById('prod-embalagem').value) || 0;
+  const preco = parseFloat(document.getElementById('prod-preco-sugerido').value) || 0;
+  const custo = mat + mao + emb;
+  const margem = preco > 0 ? ((preco - custo) / preco) * 100 : 0;
+  document.getElementById('prod-cr-custo').textContent = '€' + custo.toFixed(2);
+  document.getElementById('prod-cr-margem').textContent = margem.toFixed(1) + '%';
+  document.getElementById('prod-cr-margem').style.color = margem >= 0 ? 'var(--brand)' : 'var(--danger)';
+}
+
+function openNovoProduto() {
+  editingId.produto = null;
+  document.getElementById('modal-produto-title').textContent = 'Novo Produto';
+  ['sku','nome','custo-material','custo-mao-obra','embalagem','preco-sugerido'].forEach(f => document.getElementById('prod-' + f).value = '');
+  document.getElementById('prod-categoria').value = '';
+  document.getElementById('prod-material').value = '';
+  calcProduto();
+  openModal('modal-produto');
+}
+
+function editProduto(id) {
+  const c = DB.get('catalogo').find(x => x.id === id);
+  if (!c) return;
+  editingId.produto = id;
+  document.getElementById('modal-produto-title').textContent = 'Editar Produto';
+  document.getElementById('prod-sku').value = c.sku;
+  document.getElementById('prod-nome').value = c.nome;
+  document.getElementById('prod-categoria').value = c.categoria;
+  document.getElementById('prod-material').value = c.material;
+  document.getElementById('prod-custo-material').value = c.custoMaterial;
+  document.getElementById('prod-custo-mao-obra').value = c.custoMaoObra;
+  document.getElementById('prod-embalagem').value = c.embalagem;
+  document.getElementById('prod-preco-sugerido').value = c.precoSugerido;
+  calcProduto();
+  openModal('modal-produto');
+}
+
+async function saveProduto() {
+  const nome = document.getElementById('prod-nome').value.trim();
+  if (!nome) { showToast('⚠️ Nome do produto é obrigatório'); return; }
+  const mat = parseFloat(document.getElementById('prod-custo-material').value) || 0;
+  const mao = parseFloat(document.getElementById('prod-custo-mao-obra').value) || 0;
+  const emb = parseFloat(document.getElementById('prod-embalagem').value) || 0;
+  const preco = parseFloat(document.getElementById('prod-preco-sugerido').value) || 0;
+  const custo = mat + mao + emb;
+  const margem = preco > 0 ? parseFloat(((preco - custo) / preco * 100).toFixed(2)) : 0;
+  const item = {
+    id: editingId.produto ?? Date.now(),
+    sku: document.getElementById('prod-sku').value.trim(),
+    nome,
+    categoria: document.getElementById('prod-categoria').value,
+    material: document.getElementById('prod-material').value,
+    custoMaterial: mat, custoMaoObra: mao, embalagem: emb,
+    custoTotal: +custo.toFixed(2),
+    precoSugerido: preco,
+    margemSugerida: margem,
+  };
+  await DB.upsert('catalogo', item);
+  closeModal('modal-produto');
+  renderCatalogoDef();
+  showToast(editingId.produto ? '✅ Produto atualizado' : '✅ Produto adicionado');
+  editingId.produto = null;
+}
+
+// ---- UTILIZADORES ----
+function renderUtilizadoresDef() {
+  const users = DB.get('utilizadores');
+  const tbody = document.getElementById('utilizadores-tbody');
+  const empty = document.getElementById('utilizadores-empty');
+  if (!users.length) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = users.map(u => {
+    const nivelColor = u.nivel === 'Admin' ? 'var(--brand)' : u.nivel === 'Editor' ? 'var(--warning)' : 'var(--muted)';
+    const ativoColor = u.ativo === 'Ativo' ? 'var(--success)' : 'var(--danger)';
+    return `<tr>
+      <td style="font-weight:600;">${esc(u.nome)}</td>
+      <td style="color:var(--muted);">${esc(u.email)}</td>
+      <td><span style="color:${nivelColor};font-weight:600;font-size:12px;">${esc(u.nivel)}</span></td>
+      <td><span style="color:${ativoColor};font-size:12px;font-weight:600;">${esc(u.ativo)}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="editUtilizador(${u.id})">Editar</button>
+          <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="confirmDeleteItem('utilizadores',${u.id},renderUtilizadoresDef)">Eliminar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openNovoUtilizador() {
+  editingId.utilizador = null;
+  document.getElementById('modal-utilizador-title').textContent = 'Novo Utilizador';
+  document.getElementById('util-nome').value = '';
+  document.getElementById('util-email').value = '';
+  document.getElementById('util-nivel').value = 'Admin';
+  document.getElementById('util-ativo').value = 'Ativo';
+  document.getElementById('util-notas').value = '';
+  openModal('modal-utilizador');
+}
+
+function editUtilizador(id) {
+  const u = DB.get('utilizadores').find(x => x.id === id);
+  if (!u) return;
+  editingId.utilizador = id;
+  document.getElementById('modal-utilizador-title').textContent = 'Editar Utilizador';
+  document.getElementById('util-nome').value = u.nome;
+  document.getElementById('util-email').value = u.email;
+  document.getElementById('util-nivel').value = u.nivel;
+  document.getElementById('util-ativo').value = u.ativo;
+  document.getElementById('util-notas').value = u.notas;
+  openModal('modal-utilizador');
+}
+
+async function saveUtilizador() {
+  const nome = document.getElementById('util-nome').value.trim();
+  const email = document.getElementById('util-email').value.trim();
+  if (!nome || !email) { showToast('⚠️ Nome e email são obrigatórios'); return; }
+  const item = {
+    id: editingId.utilizador ?? Date.now(),
+    nome, email,
+    nivel: document.getElementById('util-nivel').value,
+    ativo: document.getElementById('util-ativo').value,
+    notas: document.getElementById('util-notas').value.trim(),
+  };
+  await DB.upsert('utilizadores', item);
+  closeModal('modal-utilizador');
+  renderUtilizadoresDef();
+  showToast(editingId.utilizador ? '✅ Utilizador atualizado' : '✅ Utilizador adicionado');
+  editingId.utilizador = null;
+}
+
+// ---- shared delete helper ----
+function confirmDeleteItem(collection, id, onConfirm) {
+  openModal('modal-delete');
+  document.getElementById('confirm-delete-btn').onclick = async () => {
+    await DB.delete(collection, id);
+    closeModal('modal-delete');
+    onConfirm();
+    showToast('✅ Item eliminado');
+  };
 }
 
 // ===================== UTILS =====================
