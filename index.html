@@ -419,6 +419,10 @@
             <h4 style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text);">Trabalhos Pendentes / Por Imprimir</h4>
             <div id="dash-trabalhos-ativos"></div>
           </div>
+          <div class="card" style="padding:20px;grid-column:1/-1;">
+            <h4 style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text);">Resumo por Categoria</h4>
+            <div id="dash-categorias"></div>
+          </div>
         </div>
 
         <!-- GUIA DE UTILIZAÇÃO (movido para página própria) -->
@@ -3285,13 +3289,13 @@ function renderDashboard() {
       `).join('')
     : '<div class="empty-state" style="padding:24px 0;"><p>Sem orçamentos pendentes</p></div>';
 
-  // Melhores clientes — agrega por nome, conta orçamentos aceites, soma valores
+  // Melhores clientes — agrega por nome a partir de vendas (receita real)
   const clienteMap = {};
-  orcamentos.filter(o => o.estado === 'Aceite' && o.cliente).forEach(o => {
-    const key = (o.cliente || '').trim().toLowerCase();
-    if (!clienteMap[key]) clienteMap[key] = { nome: o.cliente, count: 0, total: 0 };
+  vendas.filter(v => v.cliente).forEach(v => {
+    const key = (v.cliente || '').trim().toLowerCase();
+    if (!clienteMap[key]) clienteMap[key] = { nome: v.cliente, count: 0, total: 0 };
     clienteMap[key].count++;
-    clienteMap[key].total += parseFloat(o.preco || 0);
+    clienteMap[key].total += parseFloat(v.receita || 0);
   });
   const topClientes = Object.values(clienteMap).sort((a, b) => b.total - a.total).slice(0, 6);
   document.getElementById('dash-melhores-clientes').innerHTML = topClientes.length
@@ -3378,6 +3382,40 @@ function renderDashboard() {
           </div>`;
       }).join('')
     : '<div class="empty-state" style="padding:24px 0;"><p style="font-size:13px;">Todos os filamentos acima de 40% — stock OK</p></div>';
+
+  // Resumo por categoria (vendas)
+  const catNames = [...new Set(vendas.map(v => v.categoria).filter(Boolean))].sort();
+  const catRows = catNames.map(cat => {
+    const items = vendas.filter(v => v.categoria === cat);
+    const receita = items.reduce((s, v) => s + (v.receita || 0), 0);
+    const custo = items.reduce((s, v) => s + (v.custoTotal || 0), 0);
+    const lucro = receita - custo;
+    const margem = receita > 0 ? (lucro / receita) * 100 : 0;
+    return { cat, count: items.length, receita, custo, lucro, margem };
+  });
+  document.getElementById('dash-categorias').innerHTML = catRows.length
+    ? `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">
+          <th style="text-align:left;padding:6px 10px 10px;">Categoria</th>
+          <th style="text-align:center;padding:6px 10px 10px;">Nº Vendas</th>
+          <th style="text-align:right;padding:6px 10px 10px;">Receita</th>
+          <th style="text-align:right;padding:6px 10px 10px;">Custo</th>
+          <th style="text-align:right;padding:6px 10px 10px;">Lucro</th>
+          <th style="text-align:right;padding:6px 10px 10px;">Margem</th>
+        </tr></thead>
+        <tbody>${catRows.map(r => {
+          const mc = r.margem >= 40 ? 'var(--success)' : r.margem >= 20 ? 'var(--warning)' : 'var(--danger)';
+          return `<tr style="border-top:1px solid var(--border);">
+            <td style="padding:9px 10px;font-weight:600;">${esc(r.cat)}</td>
+            <td style="padding:9px 10px;text-align:center;color:var(--muted);">${r.count}</td>
+            <td style="padding:9px 10px;text-align:right;font-weight:600;color:var(--brand);">€${r.receita.toFixed(2)}</td>
+            <td style="padding:9px 10px;text-align:right;color:var(--muted);">€${r.custo.toFixed(2)}</td>
+            <td style="padding:9px 10px;text-align:right;font-weight:600;color:${r.lucro>=0?'var(--success)':'var(--danger)'};">€${r.lucro.toFixed(2)}</td>
+            <td style="padding:9px 10px;text-align:right;font-weight:600;color:${mc};">${r.margem.toFixed(1)}%</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`
+    : '<div class="empty-state" style="padding:24px 0;"><p style="font-size:13px;">Sem vendas por categoria ainda</p></div>';
 }
 
 // ===================== TRABALHOS =====================
