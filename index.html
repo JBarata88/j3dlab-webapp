@@ -108,6 +108,7 @@
     border-radius: 12px; padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.12);
     position: relative; overflow: hidden;
+    container-type: inline-size;
   }
   .stat-card::before {
     content: ''; position: absolute; top: -40px; right: -40px;
@@ -115,7 +116,12 @@
     background: radial-gradient(circle, var(--brand-glow) 0%, transparent 70%);
   }
   .stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-  .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(14px, 11cqi, 26px);
+    font-weight: 800; color: var(--text); line-height: 1.1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
   /* Buttons */
