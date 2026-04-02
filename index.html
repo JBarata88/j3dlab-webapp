@@ -372,6 +372,10 @@
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       Definições
     </div>
+    <div class="nav-item" data-page="guia" onclick="navigate(this)">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Guia de Utilização
+    </div>
   </nav>
   <div id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
@@ -409,8 +413,8 @@
           </div>
         </div>
 
-        <!-- GUIA DE UTILIZAÇÃO -->
-        <div style="margin-top:40px;">
+        <!-- GUIA DE UTILIZAÇÃO (movido para página própria) -->
+        <div style="display:none;">
           <div style="margin-bottom:24px;">
             <h3 style="font-size:22px;font-weight:800;letter-spacing:-0.03em;color:var(--text);">Guia de Utilização</h3>
             <p style="color:var(--muted);font-size:13px;margin-top:6px;line-height:1.6;">Como tirar o máximo partido da plataforma J3D Lab PT.</p>
@@ -1086,6 +1090,207 @@
               <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <p>Sem utilizadores ainda. Adiciona o primeiro!</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GUIA DE UTILIZAÇÃO PAGE -->
+      <div id="page-guia" class="page">
+        <div style="margin-bottom:28px;">
+          <h3 style="font-size:22px;font-weight:800;letter-spacing:-0.03em;color:var(--text);">Guia de Utilização</h3>
+          <p style="color:var(--muted);font-size:13px;margin-top:6px;line-height:1.6;">Como tirar o máximo partido da plataforma J3D Lab PT.</p>
+        </div>
+
+        <!-- Negócio -->
+        <p style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">Negócio</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;">
+
+          <!-- Orçamento -->
+          <div class="card" style="padding:22px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,43,0.14) 0%,transparent 70%);pointer-events:none;"></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,107,43,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="18" height="18" fill="none" stroke="var(--brand)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <div>
+                <h4 style="font-size:14px;font-weight:700;color:var(--text);">Criar um Orçamento</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:1px;">Calcular o custo de uma peça</p>
+              </div>
+            </div>
+            <ol style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Vai a <strong style="color:var(--text);">Orçamentos</strong> e clica em <strong style="color:var(--text);">Novo Orçamento</strong>.</span>
+              </li>
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</span>
+                <div style="font-size:13px;color:var(--muted);line-height:1.5;">
+                  Preenche os campos:
+                  <ul style="list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:4px;">
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Cliente</strong> — seleciona ou cria um novo</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Peça / Produto</strong> — nome da peça a imprimir</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Filamentos</strong> — material(ais) e peso em gramas</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Tempo de impressão</strong> — em horas</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Qualidade</strong> — define a margem aplicada</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Mão de obra</strong> — minutos de trabalho manual</span></li>
+                  </ul>
+                </div>
+              </li>
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">O preço final é calculado automaticamente. Guarda e envia ao cliente.</span>
+              </li>
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">4</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Quando o cliente aceitar, marca o estado como <strong style="color:var(--success);">Aceite</strong> — o orçamento passa automaticamente para <strong style="color:var(--text);">Trabalhos</strong>.</span>
+              </li>
+            </ol>
+          </div>
+
+          <!-- Trabalho de Impressão -->
+          <div class="card" style="padding:22px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,43,0.14) 0%,transparent 70%);pointer-events:none;"></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,107,43,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="18" height="18" fill="none" stroke="var(--brand)" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div>
+                <h4 style="font-size:14px;font-weight:700;color:var(--text);">Trabalho de Impressão</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:1px;">Acompanhar a produção</p>
+              </div>
+            </div>
+            <ol style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Os trabalhos são criados automaticamente ao <strong style="color:var(--text);">aceitar um orçamento</strong>.</span>
+              </li>
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</span>
+                <div style="font-size:13px;color:var(--muted);line-height:1.5;">
+                  Cada trabalho mostra:
+                  <ul style="list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:4px;">
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Estado</strong> — Para Imprimir / Pendente / Concluído</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Materiais e pesos</strong> usados na impressão</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Tempo e margem</strong> calculados do orçamento</span></li>
+                  </ul>
+                </div>
+              </li>
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Atualiza o estado conforme avança. Ao marcar como <strong style="color:var(--success);">Concluído</strong>, o peso do filamento é descontado do stock automaticamente.</span>
+              </li>
+            </ol>
+          </div>
+
+          <!-- Vendas -->
+          <div class="card" style="padding:22px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,43,0.14) 0%,transparent 70%);pointer-events:none;"></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,107,43,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="18" height="18" fill="none" stroke="var(--brand)" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+              </div>
+              <div>
+                <h4 style="font-size:14px;font-weight:700;color:var(--text);">Registar uma Venda</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:1px;">Controlo de receita e margem</p>
+              </div>
+            </div>
+            <ol style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Vai a <strong style="color:var(--text);">Vendas</strong> e clica em <strong style="color:var(--text);">Nova Venda</strong>.</span>
+              </li>
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</span>
+                <div style="font-size:13px;color:var(--muted);line-height:1.5;">
+                  Preenche os campos:
+                  <ul style="list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:4px;">
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Produto</strong> — seleciona do catálogo ou escreve livremente</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Cliente</strong> — opcional, para associar à venda</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Categoria</strong> — para agrupamento nos relatórios</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Quantidade</strong>, <strong style="color:var(--text);">Custo unitário</strong> e <strong style="color:var(--text);">Preço de venda</strong></span></li>
+                  </ul>
+                </div>
+              </li>
+              <li style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">O lucro e a margem são calculados automaticamente. Podes também <strong style="color:var(--text);">importar/exportar via Excel</strong>.</span>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Configuração -->
+        <p style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">Configuração</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+
+          <!-- Categorias -->
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <div style="width:34px;height:34px;border-radius:9px;background:rgba(251,191,36,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" fill="none" stroke="var(--warning)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              </div>
+              <div>
+                <h4 style="font-size:13.5px;font-weight:700;color:var(--text);">Categorias de Produtos</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:1px;">Organizar as vendas por tipo</p>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6;">Em <strong style="color:var(--text);">Definições → Categorias</strong>, adiciona as categorias que usas (ex: <em>Miniaturas, Peças Técnicas, Cosplay</em>). Ficam disponíveis ao registar vendas e permitem ver o resumo de lucro por categoria.</p>
+          </div>
+
+          <!-- Produtos -->
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <div style="width:34px;height:34px;border-radius:9px;background:rgba(52,211,153,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" fill="none" stroke="var(--success)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+              </div>
+              <div>
+                <h4 style="font-size:13.5px;font-weight:700;color:var(--text);">Catálogo de Produtos</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:1px;">Produtos pré-definidos com custo calculado</p>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6;">Em <strong style="color:var(--text);">Definições → Produtos</strong>, regista os teus produtos com filamentos, tempo, eletricidade, mão de obra, embalagem e transporte. O custo é calculado automaticamente e serve como base para orçamentos e vendas.</p>
+          </div>
+
+          <!-- Clientes -->
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,107,43,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" fill="none" stroke="var(--brand)" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <h4 style="font-size:13.5px;font-weight:700;color:var(--text);">Clientes</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:1px;">Gestão de contactos</p>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6;">Em <strong style="color:var(--text);">Definições → Clientes</strong>, adiciona os teus clientes com nome, email e telemóvel. Uma vez criados, ficam disponíveis como sugestão automática em orçamentos e vendas.</p>
+          </div>
+
+          <!-- Filamentos -->
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,107,43,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" fill="none" stroke="var(--brand)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+              </div>
+              <div>
+                <h4 style="font-size:13.5px;font-weight:700;color:var(--text);">Filamentos</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:1px;">Inventário de bobines</p>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6;">Em <strong style="color:var(--text);">Filamentos</strong>, regista cada bobine com material, marca, cor, peso total e preço/kg. O stock é atualizado automaticamente quando um trabalho é concluído. O dashboard alerta quando o stock está baixo.</p>
+          </div>
+
+          <!-- Impressoras -->
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,107,43,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" fill="none" stroke="var(--brand)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/><line x1="6" y1="11" x2="8" y2="11"/></svg>
+              </div>
+              <div>
+                <h4 style="font-size:13.5px;font-weight:700;color:var(--text);">Impressoras</h4>
+                <p style="font-size:11px;color:var(--muted);margin-top:1px;">Registo de equipamentos</p>
+              </div>
+            </div>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6;">Em <strong style="color:var(--text);">Impressoras</strong>, regista os teus equipamentos com nome, modelo e custo de eletricidade (W). Este custo é usado no cálculo automático dos orçamentos e produtos do catálogo.</p>
           </div>
         </div>
       </div>
@@ -2071,7 +2276,7 @@ function navigate(el) {
   const page = el.dataset.page;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  const titles = { dashboard: 'Dashboard', orcamentos: 'Orçamentos', trabalhos: 'Trabalhos de Impressão', vendas: 'Registo de Vendas', filamentos: 'Filamentos', impressoras: 'Impressoras 3D', definicoes: 'Definições' };
+  const titles = { dashboard: 'Dashboard', orcamentos: 'Orçamentos', trabalhos: 'Trabalhos de Impressão', vendas: 'Registo de Vendas', filamentos: 'Filamentos', impressoras: 'Impressoras 3D', definicoes: 'Definições', guia: 'Guia de Utilização' };
   document.getElementById('page-title').textContent = titles[page] || page;
   if (page === 'dashboard') renderDashboard();
   if (page === 'orcamentos') { populateImpressorasSelect(); populateOrcamentoCatalogo(); populateOrcamentoClientes(); populateOrcamentoDropdowns(); renderOrcamentos(); }
