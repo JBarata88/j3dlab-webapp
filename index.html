@@ -2638,10 +2638,11 @@ function renderDashboard() {
       `).join('')
     : '<div class="empty-state" style="padding:24px 0;"><p>Sem orçamentos ainda</p></div>';
 
-  // Filamentos stock — agrega por marca+material+cor, mostra apenas abaixo de 40%
+  // Filamentos stock — agrega por marca+material+cor (case-insensitive), mostra apenas abaixo de 40%
   const filGrupos = {};
   filamentos.forEach(f => {
-    const key = `${f.marca}||${f.material}||${f.corHex}||${f.corNome}`;
+    const normalize = s => (s || '').trim().toLowerCase();
+    const key = `${normalize(f.marca)}||${normalize(f.material)}||${normalize(f.corNome)}`;
     if (!filGrupos[key]) filGrupos[key] = { marca: f.marca, material: f.material, corHex: f.corHex, corNome: f.corNome, pesoRestante: 0, pesoTotal: 0, count: 0 };
     filGrupos[key].pesoRestante += parseFloat(f.pesoRestante) || 0;
     filGrupos[key].pesoTotal    += parseFloat(f.pesoTotal) || 0;
