@@ -130,6 +130,7 @@ create table if not exists public.configuracoes (
 -- CLIENTES (Carteira de clientes)
 create table if not exists public.clientes (
   id            bigint primary key,
+  cliente_id    text unique,
   nome          text not null,
   email         text,
   telefone      text,

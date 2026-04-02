@@ -738,7 +738,7 @@
           <div class="card" style="overflow:hidden;">
             <table class="data-table">
               <thead><tr>
-                <th>Nome</th><th>Email</th><th>Telefone</th><th>NIF</th><th>Notas</th><th style="width:80px;"></th>
+                <th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th><th>NIF</th><th>Notas</th><th style="width:80px;"></th>
               </tr></thead>
               <tbody id="clientes-tbody"></tbody>
             </table>
@@ -1214,7 +1214,11 @@
     </div>
     <div class="modal-body">
       <div class="form-grid" style="grid-template-columns:1fr 1fr;">
-        <div class="form-group" style="grid-column:1/-1;">
+        <div class="form-group">
+          <label>ID de Cliente</label>
+          <input id="cli-cliente-id" type="text" readonly style="background:var(--surface2);color:var(--brand);font-weight:700;letter-spacing:0.05em;">
+        </div>
+        <div class="form-group">
           <label>Nome *</label>
           <input id="cli-nome" type="text" placeholder="Nome do cliente">
         </div>
@@ -1563,10 +1567,12 @@ const _maps = {
     toDb: c => ({
       id: c.id, nome: c.nome, email: c.email || null, telefone: c.telefone || null,
       nif: c.nif || null, morada: c.morada || null, notas: c.notas || null,
+      cliente_id: c.clienteId || null,
     }),
     fromDb: r => ({
       id: r.id, nome: r.nome, email: r.email || '', telefone: r.telefone || '',
       nif: r.nif || '', morada: r.morada || '', notas: r.notas || '',
+      clienteId: r.cliente_id || '',
     }),
   },
   utilizadores: {
@@ -1783,6 +1789,7 @@ function openNovoClienteDeOrcamento() {
   _orcamentoCallerActive = 'cliente';
   editingId.cliente = null;
   ['cli-nome','cli-email','cli-telefone','cli-nif','cli-morada','cli-notas'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cli-cliente-id').value = gerarClienteId();
   document.getElementById('modal-cliente-title').textContent = 'Novo Cliente';
   closeModal('modal-orcamento');
   openModal('modal-cliente');
@@ -3096,6 +3103,7 @@ function renderClientesDef() {
   empty.style.display = 'none';
   tbody.innerHTML = clientes.map(c => `
     <tr>
+      <td style="font-family:monospace;font-size:12px;font-weight:700;color:var(--brand);white-space:nowrap;">${esc(c.clienteId)}</td>
       <td style="font-weight:600;">${esc(c.nome)}</td>
       <td style="color:var(--muted);">${esc(c.email)}</td>
       <td style="color:var(--muted);">${esc(c.telefone)}</td>
@@ -3110,10 +3118,20 @@ function renderClientesDef() {
     </tr>`).join('');
 }
 
+function gerarClienteId() {
+  const clientes = DB.get('clientes');
+  const maxNum = clientes.reduce((max, c) => {
+    const match = (c.clienteId || '').match(/J3D-C(\d+)/);
+    return match ? Math.max(max, parseInt(match[1])) : max;
+  }, 0);
+  return 'J3D-C' + String(maxNum + 1).padStart(3, '0');
+}
+
 function openNovoCliente() {
   editingId.cliente = null;
   document.getElementById('modal-cliente-title').textContent = 'Novo Cliente';
   ['nome','email','telefone','nif','morada','notas'].forEach(f => document.getElementById('cli-' + f).value = '');
+  document.getElementById('cli-cliente-id').value = gerarClienteId();
   openModal('modal-cliente');
 }
 
@@ -3122,6 +3140,7 @@ function editCliente(id) {
   if (!c) return;
   editingId.cliente = id;
   document.getElementById('modal-cliente-title').textContent = 'Editar Cliente';
+  document.getElementById('cli-cliente-id').value = c.clienteId || gerarClienteId();
   document.getElementById('cli-nome').value = c.nome;
   document.getElementById('cli-email').value = c.email;
   document.getElementById('cli-telefone').value = c.telefone;
@@ -3134,8 +3153,10 @@ function editCliente(id) {
 async function saveCliente() {
   const nome = document.getElementById('cli-nome').value.trim();
   if (!nome) { showToast('⚠️ Nome do cliente é obrigatório'); return; }
+  const existingCliente = editingId.cliente ? DB.get('clientes').find(c => c.id === editingId.cliente) : null;
   const item = {
     id: editingId.cliente ?? Date.now(),
+    clienteId: existingCliente?.clienteId || document.getElementById('cli-cliente-id').value.trim() || gerarClienteId(),
     nome,
     email: document.getElementById('cli-email').value.trim(),
     telefone: document.getElementById('cli-telefone').value.trim(),
