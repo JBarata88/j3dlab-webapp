@@ -831,6 +831,7 @@
                   <th>Material</th>
                   <th>Marca</th>
                   <th>Cor</th>
+                  <th style="text-align:center;">Bobines</th>
                   <th>Total (g)</th>
                   <th>Restante (g)</th>
                   <th>Stock</th>
@@ -1445,7 +1446,7 @@
 
 <!-- MODAL: FILAMENTO -->
 <div class="modal-overlay" id="modal-filamento">
-  <div class="modal">
+  <div class="modal" style="width:600px;">
     <div class="modal-header">
       <h3 id="modal-filamento-title">Adicionar Filamento</h3>
       <button class="modal-close" onclick="closeModal('modal-filamento')">
@@ -1475,14 +1476,6 @@
           <input type="color" id="fil-cor-hex" value="#ffffff">
         </div>
         <div class="form-group">
-          <label>Peso Total (g)</label>
-          <input type="number" id="fil-peso-total" value="1000" min="1" step="1">
-        </div>
-        <div class="form-group">
-          <label>Peso Restante (g)</label>
-          <input type="number" id="fil-peso-restante" value="1000" min="0" step="1">
-        </div>
-        <div class="form-group">
           <label>Preço/kg (€)</label>
           <input type="number" id="fil-preco" placeholder="20.00" min="0" step="0.5">
         </div>
@@ -1500,15 +1493,40 @@
           <label>Temp. Cama (°C)</label>
           <input type="number" id="fil-temp-cama" placeholder="60" min="0" step="5">
         </div>
-        <div class="form-group">
-          <label>Estado</label>
-          <select id="fil-estado">
-            <option>Disponível</option><option>Baixo Stock</option><option>Esgotado</option><option>Aberto</option>
-          </select>
-        </div>
-        <div class="form-group">
+        <div class="form-group span-2">
           <label>Localização</label>
           <input type="text" id="fil-localizacao" placeholder="Ex: Prateleira A2">
+        </div>
+
+        <!-- BOBINES -->
+        <div class="form-group span-2">
+          <label>Bobines</label>
+          <div id="fil-bobines-list" style="display:flex;flex-direction:column;gap:6px;min-height:4px;margin-bottom:8px;"></div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;">
+            <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:10px;">Adicionar Bobine</p>
+            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+              <div style="flex:1;min-width:130px;">
+                <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Tamanho</label>
+                <select id="fil-bob-peso-sel" style="width:100%;" onchange="document.getElementById('fil-bob-custom-wrap').style.display=this.value==='custom'?'flex':'none'">
+                  <option value="250">250g</option>
+                  <option value="500">500g</option>
+                  <option value="750">750g</option>
+                  <option value="1000" selected>1 kg (1000g)</option>
+                  <option value="2000">2 kg (2000g)</option>
+                  <option value="custom">Personalizado…</option>
+                </select>
+              </div>
+              <div id="fil-bob-custom-wrap" style="width:100px;display:none;">
+                <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Peso (g)</label>
+                <input id="fil-bob-peso-custom" type="number" min="1" step="1" placeholder="g" style="width:100%;">
+              </div>
+              <div style="width:130px;">
+                <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Restante (g) <span style="font-weight:400;font-style:italic;">(vazio = cheia)</span></label>
+                <input id="fil-bob-restante" type="number" min="0" step="1" placeholder="ex: 850" style="width:100%;">
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="addFilBobine()" style="flex-shrink:0;height:38px;">+ Bobine</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2095,18 +2113,31 @@ const _maps = {
   filamentos: {
     toDb: f => ({
       id: f.id, marca: f.marca, material: f.material, cor_nome: f.corNome || null,
-      cor_hex: f.corHex || '#ffffff', peso_total: parseFloat(f.pesoTotal) || 1000,
-      peso_restante: parseFloat(f.pesoRestante) || 1000, preco: parseFloat(f.preco) || null,
+      cor_hex: f.corHex || '#ffffff',
+      bobines: JSON.stringify(f.bobines || []),
+      // derived totals kept for backwards compat / SQL queries
+      peso_total: filGetPesoTotal(f), peso_restante: filGetPesoRestante(f),
+      preco: parseFloat(f.preco) || null,
       diametro: f.diametro || '1.75mm', temp_bico: f.tempBico || null,
-      temp_cama: f.tempCama || null, estado: f.estado || 'Disponível', localizacao: f.localizacao || null,
+      temp_cama: f.tempCama || null, estado: filGetEstado(f), localizacao: f.localizacao || null,
     }),
-    fromDb: r => ({
-      id: r.id, marca: r.marca, material: r.material || 'PLA', corNome: r.cor_nome || '',
-      corHex: r.cor_hex || '#ffffff', pesoTotal: r.peso_total || 1000,
-      pesoRestante: r.peso_restante || 1000, preco: r.preco?.toString() || '',
-      diametro: r.diametro || '1.75mm', tempBico: r.temp_bico || '', tempCama: r.temp_cama || '',
-      estado: r.estado || 'Disponível', localizacao: r.localizacao || '',
-    }),
+    fromDb: r => {
+      let bobines = [];
+      try { bobines = typeof r.bobines === 'string' ? JSON.parse(r.bobines) : (Array.isArray(r.bobines) ? r.bobines : []); } catch(e) { bobines = []; }
+      // Auto-migrate legacy entries (no bobines column yet)
+      if (!bobines.length && (r.peso_total || r.peso_restante)) {
+        const pt = parseFloat(r.peso_total) || 1000;
+        const pr = r.peso_restante != null ? parseFloat(r.peso_restante) : pt;
+        bobines = [{ id: String(r.id) + '_legacy', pesoBobine: pt, pesoRestante: pr }];
+      }
+      return {
+        id: r.id, marca: r.marca, material: r.material || 'PLA', corNome: r.cor_nome || '',
+        corHex: r.cor_hex || '#ffffff', bobines,
+        preco: r.preco?.toString() || '',
+        diametro: r.diametro || '1.75mm', tempBico: r.temp_bico || '', tempCama: r.temp_cama || '',
+        localizacao: r.localizacao || '',
+      };
+    },
   },
   impressoras: {
     toDb: i => ({
@@ -2629,28 +2660,100 @@ function renderOrcamentos() {
   `).join('');
 }
 
+// ===================== FILAMENTOS — HELPERS =====================
+function filGetPesoTotal(f) {
+  return (f.bobines || []).reduce((s, b) => s + (parseFloat(b.pesoBobine) || 0), 0);
+}
+function filGetPesoRestante(f) {
+  return (f.bobines || []).reduce((s, b) => s + (parseFloat(b.pesoRestante) || 0), 0);
+}
+function filGetEstado(f) {
+  const bobines = f.bobines || [];
+  if (!bobines.length) return 'Esgotado';
+  const total = filGetPesoTotal(f);
+  const restante = filGetPesoRestante(f);
+  if (restante <= 0) return 'Esgotado';
+  if (total > 0 && restante / total < 0.25) return 'Baixo Stock';
+  return 'Disponível';
+}
+// Calculate which bobines cover the required weight (use partial spools first)
+function calcBobinesNecessarias(fil, pesoNecessario) {
+  const available = [...(fil.bobines || [])].filter(b => parseFloat(b.pesoRestante) > 0)
+    .sort((a, b) => parseFloat(a.pesoRestante) - parseFloat(b.pesoRestante));
+  let remaining = parseFloat(pesoNecessario) || 0;
+  const bobinesNecessarias = [];
+  for (const bob of available) {
+    if (remaining <= 0) break;
+    const use = Math.min(parseFloat(bob.pesoRestante) || 0, remaining);
+    if (use > 0) { bobinesNecessarias.push({ bobineId: bob.id, pesoUsado: Math.round(use * 10) / 10 }); remaining -= use; }
+  }
+  return { bobinesNecessarias, trocaBobine: bobinesNecessarias.length > 1, stockInsuficiente: remaining > 0.01 };
+}
+
+// ===================== FILAMENTOS — ESTADO MODAL =====================
+let _filBobines = [];
+
+function renderFilBobinesList() {
+  const container = document.getElementById('fil-bobines-list');
+  if (!container) return;
+  if (!_filBobines.length) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:12px;padding:2px 0;">Nenhuma bobine adicionada ainda.</p>`;
+    return;
+  }
+  container.innerHTML = _filBobines.map((b, idx) => {
+    const pct = b.pesoBobine > 0 ? Math.round((b.pesoRestante / b.pesoBobine) * 100) : 0;
+    const barColor = pct < 25 ? 'background:var(--danger)' : pct < 50 ? 'background:var(--warning)' : '';
+    const textColor = pct < 25 ? 'var(--danger)' : pct < 50 ? 'var(--warning)' : 'var(--muted)';
+    return `<div style="display:flex;align-items:center;gap:10px;background:var(--elevated);border:1px solid var(--border);border-radius:8px;padding:9px 12px;">
+      <span style="font-size:11px;color:var(--muted);flex-shrink:0;min-width:54px;">Bobine ${idx + 1}</span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;font-weight:600;color:var(--text);">${b.pesoBobine}g</span>
+          <span style="font-size:11px;color:${textColor};">${b.pesoRestante}g restantes (${pct}%)</span>
+        </div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%;${barColor}"></div></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="_filBobines.splice(${idx},1);renderFilBobinesList();" style="color:var(--danger);padding:4px 8px;flex-shrink:0;">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addFilBobine() {
+  const sel = document.getElementById('fil-bob-peso-sel');
+  const customInput = document.getElementById('fil-bob-peso-custom');
+  const restaInput = document.getElementById('fil-bob-restante');
+  let pesoBobine;
+  if (sel.value === 'custom') {
+    pesoBobine = parseFloat(customInput.value);
+    if (!pesoBobine || pesoBobine <= 0) { showToast('⚠️ Introduz o peso personalizado'); return; }
+  } else {
+    pesoBobine = parseFloat(sel.value);
+  }
+  const restaRaw = restaInput.value.trim();
+  const pesoRestante = restaRaw === '' ? pesoBobine : Math.min(pesoBobine, parseFloat(restaRaw) || pesoBobine);
+  _filBobines.push({ id: String(Date.now()) + '_' + _filBobines.length, pesoBobine, pesoRestante });
+  restaInput.value = '';
+  renderFilBobinesList();
+}
+
 // ===================== FILAMENTOS =====================
 async function saveFilamento() {
   const marca = document.getElementById('fil-marca').value.trim();
   const material = document.getElementById('fil-material').value;
   if (!marca) { showToast('⚠️ Insere a marca do filamento'); return; }
-
-  const pesoTotal = parseFloat(document.getElementById('fil-peso-total').value) || 1000;
-  const pesoRestante = parseFloat(document.getElementById('fil-peso-restante').value) || 1000;
+  if (!_filBobines.length) { showToast('⚠️ Adiciona pelo menos uma bobine'); return; }
 
   const item = {
     id: editingId.filamento || Date.now(),
     marca, material,
     corNome: document.getElementById('fil-cor-nome').value,
     corHex: document.getElementById('fil-cor-hex').value,
-    pesoTotal,
-    pesoRestante: Math.min(pesoRestante, pesoTotal),
     preco: document.getElementById('fil-preco').value,
     diametro: document.getElementById('fil-diametro').value,
     tempBico: document.getElementById('fil-temp-bico').value,
     tempCama: document.getElementById('fil-temp-cama').value,
-    estado: document.getElementById('fil-estado').value,
     localizacao: document.getElementById('fil-localizacao').value,
+    bobines: _filBobines,
   };
 
   await DB.upsert('filamentos', item);
@@ -2662,14 +2765,15 @@ async function saveFilamento() {
 }
 
 function resetFilamentoForm() {
-  ['fil-marca','fil-cor-nome','fil-temp-bico','fil-temp-cama','fil-localizacao'].forEach(id => document.getElementById(id).value = '');
+  ['fil-marca','fil-cor-nome','fil-temp-bico','fil-temp-cama','fil-localizacao','fil-preco'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fil-material').value = 'PLA';
   document.getElementById('fil-cor-hex').value = '#ffffff';
-  document.getElementById('fil-peso-total').value = '1000';
-  document.getElementById('fil-peso-restante').value = '1000';
-  document.getElementById('fil-preco').value = '';
   document.getElementById('fil-diametro').value = '1.75mm';
-  document.getElementById('fil-estado').value = 'Disponível';
+  document.getElementById('fil-bob-peso-sel').value = '1000';
+  document.getElementById('fil-bob-custom-wrap').style.display = 'none';
+  document.getElementById('fil-bob-restante').value = '';
+  _filBobines = [];
+  renderFilBobinesList();
   editingId.filamento = null;
   document.getElementById('modal-filamento-title').textContent = 'Adicionar Filamento';
 }
@@ -2683,14 +2787,13 @@ function editFilamento(id) {
   document.getElementById('fil-material').value = f.material;
   document.getElementById('fil-cor-nome').value = f.corNome;
   document.getElementById('fil-cor-hex').value = f.corHex;
-  document.getElementById('fil-peso-total').value = f.pesoTotal;
-  document.getElementById('fil-peso-restante').value = f.pesoRestante;
   document.getElementById('fil-preco').value = f.preco;
   document.getElementById('fil-diametro').value = f.diametro;
   document.getElementById('fil-temp-bico').value = f.tempBico;
   document.getElementById('fil-temp-cama').value = f.tempCama;
-  document.getElementById('fil-estado').value = f.estado;
   document.getElementById('fil-localizacao').value = f.localizacao;
+  _filBobines = JSON.parse(JSON.stringify(f.bobines || []));
+  renderFilBobinesList();
   openModal('modal-filamento');
 }
 
@@ -2701,13 +2804,17 @@ function renderFilamentos() {
   if (!data.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
   empty.style.display = 'none';
 
-  const statusBadge = {
-    'Disponível': 'badge-success', 'Baixo Stock': 'badge-warning',
-    'Esgotado': 'badge-danger', 'Aberto': 'badge-brand'
-  };
+  const statusBadge = { 'Disponível': 'badge-success', 'Baixo Stock': 'badge-warning', 'Esgotado': 'badge-danger' };
 
   tbody.innerHTML = data.map(f => {
-    const pct = Math.round((f.pesoRestante / f.pesoTotal) * 100);
+    const bobines = f.bobines || [];
+    const pesoTotal = filGetPesoTotal(f);
+    const pesoRestante = filGetPesoRestante(f);
+    const estado = filGetEstado(f);
+    const pct = pesoTotal > 0 ? Math.round((pesoRestante / pesoTotal) * 100) : 0;
+    const bobinesDisp = bobines.filter(b => parseFloat(b.pesoRestante) > 0).length;
+    const bobinesTotal = bobines.length;
+    const bobineBadgeColor = bobinesDisp === 0 ? 'var(--danger)' : bobinesDisp < bobinesTotal ? 'var(--warning)' : 'var(--success)';
     return `
       <tr>
         <td><strong>${esc(f.material)}</strong></td>
@@ -2716,16 +2823,19 @@ function renderFilamentos() {
           <span class="color-dot" style="background:${f.corHex};"></span>
           ${esc(f.corNome) || f.corHex}
         </td>
-        <td style="color:var(--muted)">${f.pesoTotal}g</td>
+        <td style="text-align:center;">
+          <span style="font-size:12px;font-weight:700;color:${bobineBadgeColor};">${bobinesDisp}</span><span style="font-size:11px;color:var(--muted);">/${bobinesTotal}</span>
+        </td>
+        <td style="color:var(--muted)">${pesoTotal}g</td>
         <td>
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="progress-wrap" style="width:60px;"><div class="progress-fill" style="width:${pct}%;${pct<25?'background:var(--danger)':pct<50?'background:var(--warning)':''}"></div></div>
-            <span style="font-size:12px;color:var(--muted)">${f.pesoRestante}g</span>
+            <span style="font-size:12px;color:var(--muted)">${Math.round(pesoRestante)}g</span>
           </div>
         </td>
         <td style="font-size:12px;color:var(--muted)">${pct}%</td>
         <td>${f.preco ? '€'+f.preco+'/kg' : '<span style="color:var(--muted)">—</span>'}</td>
-        <td><span class="badge ${statusBadge[f.estado] || 'badge-neutral'}">${f.estado}</span></td>
+        <td><span class="badge ${statusBadge[estado] || 'badge-neutral'}">${estado}</span></td>
         <td>
           <div style="display:flex;gap:6px;">
             <button class="btn btn-ghost btn-sm" onclick="editFilamento(${f.id})">Editar</button>
@@ -3100,7 +3210,7 @@ function renderDashboard() {
 
   const totalReceita = orcamentos.filter(o => o.estado === 'Aceite').reduce((s, o) => s + parseFloat(o.preco || 0), 0);
   const orcAceites = orcamentos.filter(o => o.estado === 'Aceite').length;
-  const filBaixo = filamentos.filter(f => (f.pesoRestante / f.pesoTotal) < 0.25).length;
+  const filBaixo = filamentos.filter(f => { const t = filGetPesoTotal(f); return t > 0 && filGetPesoRestante(f) / t < 0.25; }).length;
   const impDisponiveis = impressoras.filter(i => i.estado === 'Disponível').length;
   const vendasReceita = vendas.reduce((s, v) => s + (v.receita || 0), 0);
   const vendasLucro = vendas.reduce((s, v) => s + (v.lucro || 0), 0);
@@ -3164,10 +3274,12 @@ function renderDashboard() {
   filamentos.forEach(f => {
     const normalize = s => (s || '').trim().toLowerCase();
     const key = `${normalize(f.marca)}||${normalize(f.material)}||${normalize(f.corNome)}`;
-    if (!filGrupos[key]) filGrupos[key] = { marca: f.marca, material: f.material, corHex: f.corHex, corNome: f.corNome, pesoRestante: 0, pesoTotal: 0, count: 0 };
-    filGrupos[key].pesoRestante += parseFloat(f.pesoRestante) || 0;
-    filGrupos[key].pesoTotal    += parseFloat(f.pesoTotal) || 0;
+    if (!filGrupos[key]) filGrupos[key] = { marca: f.marca, material: f.material, corHex: f.corHex, corNome: f.corNome, pesoRestante: 0, pesoTotal: 0, count: 0, bobinesDisp: 0, bobinesTotal: 0 };
+    filGrupos[key].pesoRestante += filGetPesoRestante(f);
+    filGrupos[key].pesoTotal    += filGetPesoTotal(f);
     filGrupos[key].count++;
+    filGrupos[key].bobinesTotal += (f.bobines || []).length;
+    filGrupos[key].bobinesDisp  += (f.bobines || []).filter(b => parseFloat(b.pesoRestante) > 0).length;
   });
   const baixoStock = Object.values(filGrupos)
     .filter(g => g.pesoTotal > 0 && (g.pesoRestante / g.pesoTotal) < 0.40)
@@ -3179,14 +3291,14 @@ function renderDashboard() {
         const cor = pct < 15 ? 'var(--danger)' : pct < 25 ? 'var(--warning)' : 'var(--muted)';
         const barColor = pct < 15 ? 'background:var(--danger)' : pct < 25 ? 'background:var(--warning)' : '';
         const corLabel = g.corNome ? ` · ${g.corNome}` : '';
-        const countBadge = g.count > 1 ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">(${g.count})</span>` : '';
+        const bobineInfo = g.bobinesTotal > 0 ? `<span style="font-size:10px;color:var(--muted);margin-left:4px;">${g.bobinesDisp}/${g.bobinesTotal} bob.</span>` : '';
         return `
           <div style="margin-bottom:14px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
               <div style="display:flex;align-items:center;gap:6px;font-size:13px;min-width:0;">
                 <span class="color-dot" style="background:${g.corHex};flex-shrink:0;"></span>
                 <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(g.marca)} ${esc(g.material)}${esc(corLabel)}</span>
-                ${countBadge}
+                ${bobineInfo}
               </div>
               <span style="font-size:12px;font-weight:600;color:${cor};white-space:nowrap;margin-left:8px;">${pct}% · ${Math.round(g.pesoRestante)}g</span>
             </div>
@@ -3307,13 +3419,26 @@ function deleteTrabalho(orcamentoId) {
       for (const item of filamentosUsados) {
         const fil = DB.get('filamentos').find(f => f.id === item.filamentoId);
         if (!fil) continue;
-        const pesoTotal = parseFloat(fil.pesoTotal) || 1000;
-        const novoRestante = Math.min(pesoTotal, (parseFloat(fil.pesoRestante) || 0) + (parseFloat(item.peso) || 0));
-        let novoEstado;
-        if (novoRestante <= 0) novoEstado = 'Esgotado';
-        else if (novoRestante / pesoTotal < 0.25) novoEstado = 'Baixo Stock';
-        else novoEstado = 'Disponível';
-        await DB.upsert('filamentos', { ...fil, pesoRestante: novoRestante, estado: novoEstado });
+        const bobinesNecessarias = item.bobinesNecessarias || [];
+        if (bobinesNecessarias.length) {
+          // Restore specific bobines
+          const updatedBobines = (fil.bobines || []).map(bob => {
+            const uso = bobinesNecessarias.find(b => b.bobineId === bob.id);
+            if (!uso) return bob;
+            const max = parseFloat(bob.pesoBobine) || 1000;
+            return { ...bob, pesoRestante: Math.min(max, (parseFloat(bob.pesoRestante) || 0) + (parseFloat(uso.pesoUsado) || 0)) };
+          });
+          await DB.upsert('filamentos', { ...fil, bobines: updatedBobines });
+        } else {
+          // Fallback: restore to last bobine (legacy)
+          const updatedBobines = [...(fil.bobines || [])];
+          if (updatedBobines.length) {
+            const last = updatedBobines[updatedBobines.length - 1];
+            const max = parseFloat(last.pesoBobine) || 1000;
+            updatedBobines[updatedBobines.length - 1] = { ...last, pesoRestante: Math.min(max, (parseFloat(last.pesoRestante) || 0) + (parseFloat(item.peso) || 0)) };
+            await DB.upsert('filamentos', { ...fil, bobines: updatedBobines });
+          }
+        }
       }
       if (filamentosUsados.length) renderFilamentos();
     }
@@ -3369,15 +3494,28 @@ async function updateTrabalhoStatus(orcamentoId, newStatus) {
   if (newStatus === 'Concluído' && !old.vendaId) {
     const filamentosUsados = old.filamentosUsados || [];
     for (const item of filamentosUsados) {
-      const filamentos = DB.get('filamentos');
-      const fil = filamentos.find(f => f.id === item.filamentoId);
+      const fil = DB.get('filamentos').find(f => f.id === item.filamentoId);
       if (!fil) continue;
-      const novoRestante = Math.max(0, (parseFloat(fil.pesoRestante) || 0) - (parseFloat(item.peso) || 0));
-      const pesoTotal = parseFloat(fil.pesoTotal) || 1000;
-      let novoEstado = fil.estado;
-      if (novoRestante <= 0) novoEstado = 'Esgotado';
-      else if (novoRestante / pesoTotal < 0.25) novoEstado = 'Baixo Stock';
-      await DB.upsert('filamentos', { ...fil, pesoRestante: novoRestante, estado: novoEstado });
+      const bobinesNecessarias = item.bobinesNecessarias || [];
+      if (bobinesNecessarias.length) {
+        // Deduct from specific bobines
+        const updatedBobines = (fil.bobines || []).map(bob => {
+          const uso = bobinesNecessarias.find(b => b.bobineId === bob.id);
+          if (!uso) return bob;
+          return { ...bob, pesoRestante: Math.max(0, (parseFloat(bob.pesoRestante) || 0) - (parseFloat(uso.pesoUsado) || 0)) };
+        });
+        await DB.upsert('filamentos', { ...fil, bobines: updatedBobines });
+      } else {
+        // Fallback: deduct from first available bobine (legacy entries)
+        const updatedBobines = [...(fil.bobines || [])];
+        let remaining = parseFloat(item.peso) || 0;
+        for (let i = 0; i < updatedBobines.length && remaining > 0; i++) {
+          const deduct = Math.min(parseFloat(updatedBobines[i].pesoRestante) || 0, remaining);
+          updatedBobines[i] = { ...updatedBobines[i], pesoRestante: Math.max(0, (parseFloat(updatedBobines[i].pesoRestante) || 0) - deduct) };
+          remaining -= deduct;
+        }
+        await DB.upsert('filamentos', { ...fil, bobines: updatedBobines });
+      }
     }
     if (filamentosUsados.length) renderFilamentos();
   }
@@ -3415,12 +3553,13 @@ function openFilamentosModal(orcamentoId) {
   const subtitle = document.getElementById('trab-fil-subtitle');
   if (subtitle && orc) subtitle.textContent = `Trabalho: ${orc.nome}${orc.cliente ? ' · ' + orc.cliente : ''}`;
 
-  // Populate filament select
+  // Populate filament select — show identities with total restante from bobines
   const sel = document.getElementById('trab-fil-select');
   const filamentos = DB.get('filamentos');
   sel.innerHTML = '<option value="">— Selecionar filamento —</option>' +
     filamentos.map(f => {
-      const label = `${f.marca} ${f.material}${f.corNome ? ' · ' + f.corNome : ''} (${f.pesoRestante}g restantes)`;
+      const restante = Math.round(filGetPesoRestante(f));
+      const label = `${f.marca} ${f.material}${f.corNome ? ' · ' + f.corNome : ''} (${restante}g disponíveis)`;
       return `<option value="${f.id}">${esc(label)}</option>`;
     }).join('');
 
@@ -3440,19 +3579,39 @@ function renderTrabFilList() {
 
   container.innerHTML = _trabFilModal.filamentos.map((item, idx) => {
     const fil = filamentos.find(f => f.id === item.filamentoId);
-    const label = fil
-      ? `${fil.marca} ${fil.material}${fil.corNome ? ' · ' + fil.corNome : ''}`
-      : `Filamento #${item.filamentoId}`;
-    const colorDot = fil
-      ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${fil.corHex};border:1px solid rgba(255,255,255,0.2);margin-right:6px;flex-shrink:0;"></span>`
+    const label = fil ? `${fil.marca} ${fil.material}${fil.corNome ? ' · ' + fil.corNome : ''}` : `Filamento #${item.filamentoId}`;
+    const colorDot = fil ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${fil.corHex};border:1px solid rgba(255,255,255,0.2);margin-right:6px;flex-shrink:0;"></span>` : '';
+
+    // Bobines breakdown
+    let bobinesHtml = '';
+    const bobs = item.bobinesNecessarias || [];
+    if (bobs.length && fil) {
+      bobinesHtml = `<div style="margin-top:6px;padding:7px 10px;background:var(--surface);border-radius:6px;display:flex;flex-direction:column;gap:3px;">`;
+      bobs.forEach(b => {
+        const bobIdx = (fil.bobines || []).findIndex(bb => bb.id === b.bobineId);
+        const bobLabel = bobIdx >= 0 ? `Bobine ${bobIdx + 1} (${(fil.bobines[bobIdx].pesoBobine)}g)` : 'Bobine';
+        bobinesHtml += `<span style="font-size:11px;color:var(--muted);">↳ ${esc(bobLabel)}: usar <strong style="color:var(--text);">${b.pesoUsado}g</strong></span>`;
+      });
+      bobinesHtml += `</div>`;
+    }
+
+    const trocaWarn = item.trocaBobine
+      ? `<div style="display:flex;align-items:center;gap:5px;margin-top:5px;">
+          <svg width="12" height="12" fill="none" stroke="var(--warning)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span style="font-size:11px;color:var(--warning);font-weight:600;">Troca de bobine necessária durante o trabalho</span>
+        </div>`
       : '';
-    return `<div style="display:flex;align-items:center;gap:10px;background:var(--elevated);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
-      <div style="display:flex;align-items:center;flex:1;min-width:0;">
-        ${colorDot}
-        <span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(label)}</span>
+    const stockWarn = item.stockInsuficiente
+      ? `<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:4px;">⚠️ Stock insuficiente para este peso!</div>`
+      : '';
+
+    return `<div style="background:var(--elevated);border:1px solid ${item.trocaBobine ? 'rgba(251,191,36,0.3)' : item.stockInsuficiente ? 'rgba(248,113,113,0.3)' : 'var(--border)'};border-radius:8px;padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;flex:1;min-width:0;">${colorDot}<span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(label)}</span></div>
+        <span style="font-size:13px;font-weight:700;color:var(--brand);white-space:nowrap;">${item.peso}g</span>
+        <button class="btn btn-ghost btn-sm" onclick="_trabFilModal.filamentos.splice(${idx},1);renderTrabFilList();" style="color:var(--danger);padding:4px 8px;">✕</button>
       </div>
-      <span style="font-size:13px;font-weight:700;color:var(--brand);white-space:nowrap;">${item.peso}g</span>
-      <button class="btn btn-ghost btn-sm" onclick="_trabFilModal.filamentos.splice(${idx},1);renderTrabFilList();" style="color:var(--danger);padding:4px 8px;">✕</button>
+      ${trocaWarn}${stockWarn}${bobinesHtml}
     </div>`;
   }).join('');
 }
@@ -3466,12 +3625,16 @@ function addFilamentoAoTrabalho() {
   if (!filamentoId) { showToast('⚠️ Seleciona um filamento'); return; }
   if (!peso || peso <= 0) { showToast('⚠️ Introduz um peso válido'); return; }
 
-  // Check if already added, if so update weight
+  const fil = DB.get('filamentos').find(f => f.id === filamentoId);
+  const { bobinesNecessarias, trocaBobine, stockInsuficiente } = fil
+    ? calcBobinesNecessarias(fil, peso)
+    : { bobinesNecessarias: [], trocaBobine: false, stockInsuficiente: true };
+
   const existing = _trabFilModal.filamentos.find(f => f.filamentoId === filamentoId);
   if (existing) {
-    existing.peso = peso;
+    Object.assign(existing, { peso, bobinesNecessarias, trocaBobine, stockInsuficiente });
   } else {
-    _trabFilModal.filamentos.push({ filamentoId, peso });
+    _trabFilModal.filamentos.push({ filamentoId, peso, bobinesNecessarias, trocaBobine, stockInsuficiente });
   }
 
   sel.value = '';
@@ -4197,7 +4360,7 @@ function populateProdutoDropdowns() {
   const filamentos = DB.get('filamentos');
   filSel.innerHTML = '<option value="">— Selecionar filamento —</option>' +
     filamentos.map(f => {
-      const label = `${f.marca} ${f.material}${f.corNome ? ' · ' + f.corNome : ''} (${f.pesoRestante}g)`;
+      const label = `${f.marca} ${f.material}${f.corNome ? ' · ' + f.corNome : ''} (${Math.round(filGetPesoRestante(f))}g disponíveis)`;
       return `<option value="${f.id}">${esc(label)}</option>`;
     }).join('');
 }
