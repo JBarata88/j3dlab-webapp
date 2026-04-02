@@ -109,6 +109,16 @@ create table if not exists public.catalogo (
   created_at      timestamptz default now()
 );
 
+-- CONFIGURACOES (Configurações gerais da app — linha única id=1)
+create table if not exists public.configuracoes (
+  id            bigint primary key default 1,
+  mao_obra      numeric default 8,
+  eletricidade  numeric default 0.15,
+  embalagens    jsonb default '[]',
+  outros        jsonb default '[]',
+  created_at    timestamptz default now()
+);
+
 -- CLIENTES (Carteira de clientes)
 create table if not exists public.clientes (
   id            bigint primary key,
@@ -145,6 +155,7 @@ alter table public.vendas      enable row level security;
 alter table public.filamentos  enable row level security;
 alter table public.impressoras enable row level security;
 alter table public.catalogo    enable row level security;
+alter table public.configuracoes enable row level security;
 alter table public.clientes    enable row level security;
 alter table public.utilizadores enable row level security;
 
@@ -155,5 +166,6 @@ create policy "Allow all vendas"       on public.vendas       for all using (tru
 create policy "Allow all filamentos"   on public.filamentos   for all using (true) with check (true);
 create policy "Allow all impressoras"  on public.impressoras  for all using (true) with check (true);
 create policy "Allow all catalogo"     on public.catalogo     for all using (true) with check (true);
+create policy "Allow all configuracoes" on public.configuracoes for all using (true) with check (true);
 create policy "Allow all clientes"     on public.clientes     for all using (true) with check (true);
 create policy "Allow all utilizadores" on public.utilizadores for all using (true) with check (true);

@@ -634,7 +634,11 @@
       <div id="page-definicoes" class="page">
         <!-- Tab bar -->
         <div style="display:flex;gap:4px;margin-bottom:28px;background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;">
-          <button class="def-tab active" data-tab="clientes" onclick="switchDefTab(this)">
+          <button class="def-tab active" data-tab="geral" onclick="switchDefTab(this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Geral
+          </button>
+          <button class="def-tab" data-tab="clientes" onclick="switchDefTab(this)">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
             Clientes
           </button>
@@ -648,8 +652,65 @@
           </button>
         </div>
 
+        <!-- GERAL TAB -->
+        <div id="def-tab-geral" class="def-tab-content">
+          <div style="max-width:720px;display:flex;flex-direction:column;gap:24px;">
+
+            <!-- Valores Base -->
+            <div class="card" style="padding:24px;">
+              <h4 style="font-size:14px;font-weight:700;margin-bottom:4px;">Valores Base</h4>
+              <p style="color:var(--muted);font-size:12px;margin-bottom:20px;">Usados no cálculo automático de orçamentos</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group">
+                  <label>Mão de Obra (€/hora)</label>
+                  <input id="cfg-mao-obra" type="number" step="0.01" min="0" placeholder="8.00">
+                </div>
+                <div class="form-group">
+                  <label>Custo de Eletricidade (€/kWh)</label>
+                  <input id="cfg-eletricidade" type="number" step="0.001" min="0" placeholder="0.150">
+                </div>
+              </div>
+            </div>
+
+            <!-- Embalagens -->
+            <div class="card" style="padding:24px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <h4 style="font-size:14px;font-weight:700;">Embalagens</h4>
+                <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="addConfigRow('embalagens')">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Adicionar
+                </button>
+              </div>
+              <p style="color:var(--muted);font-size:12px;margin-bottom:16px;">Tipos de embalagem disponíveis e respetivo custo</p>
+              <div id="cfg-embalagens-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+              <div id="cfg-embalagens-empty" style="color:var(--muted);font-size:13px;padding:8px 0;display:none;">Sem embalagens definidas.</div>
+            </div>
+
+            <!-- Outros -->
+            <div class="card" style="padding:24px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <h4 style="font-size:14px;font-weight:700;">Outros Materiais</h4>
+                <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="addConfigRow('outros')">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Adicionar
+                </button>
+              </div>
+              <p style="color:var(--muted);font-size:12px;margin-bottom:16px;">Fita-cola, cola, labels, enchimento, etc.</p>
+              <div id="cfg-outros-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+              <div id="cfg-outros-empty" style="color:var(--muted);font-size:13px;padding:8px 0;display:none;">Sem outros materiais definidos.</div>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn btn-primary" style="padding:10px 28px;" onclick="saveConfiguracoes()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Guardar Configurações
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- CLIENTES TAB -->
-        <div id="def-tab-clientes" class="def-tab-content">
+        <div id="def-tab-clientes" class="def-tab-content" style="display:none;">
           <div class="section-header">
             <div>
               <h3>Clientes</h3>
@@ -1420,6 +1481,22 @@ const _maps = {
       margemSugerida: r.margem_sugerida || 0,
     }),
   },
+  configuracoes: {
+    toDb: c => ({
+      id: 1,
+      mao_obra: parseFloat(c.maoObra) || 0,
+      eletricidade: parseFloat(c.eletricidade) || 0,
+      embalagens: c.embalagens || [],
+      outros: c.outros || [],
+    }),
+    fromDb: r => ({
+      id: 1,
+      maoObra: r.mao_obra ?? 8,
+      eletricidade: r.eletricidade ?? 0.15,
+      embalagens: r.embalagens || [],
+      outros: r.outros || [],
+    }),
+  },
   clientes: {
     toDb: c => ({
       id: c.id, nome: c.nome, email: c.email || null, telefone: c.telefone || null,
@@ -1444,7 +1521,7 @@ const _maps = {
 
 // ===================== DATA STORE =====================
 const DB = {
-  _cache: { orcamentos: [], trabalhos: [], vendas: [], filamentos: [], impressoras: [], catalogo: [], clientes: [], utilizadores: [] },
+  _cache: { orcamentos: [], trabalhos: [], vendas: [], filamentos: [], impressoras: [], catalogo: [], clientes: [], utilizadores: [], configuracoes: [] },
 
   get(key) { return [...(this._cache[key] || [])]; },
 
@@ -1478,7 +1555,7 @@ const DB = {
   },
 
   async loadAll() {
-    const collections = ['orcamentos', 'trabalhos', 'vendas', 'filamentos', 'impressoras', 'catalogo', 'clientes', 'utilizadores'];
+    const collections = ['orcamentos', 'trabalhos', 'vendas', 'filamentos', 'impressoras', 'catalogo', 'clientes', 'utilizadores', 'configuracoes'];
     await Promise.all(collections.map(async col => {
       const orderCol = col === 'trabalhos' ? 'orcamento_id' : 'id';
       const { data, error } = await _sb.from(col).select('*').order(orderCol, { ascending: true });
@@ -2722,9 +2799,76 @@ function switchDefTab(btn) {
 }
 
 function renderDefinicoes() {
+  renderGeralDef();
   renderClientesDef();
   renderCatalogoDef();
   renderUtilizadoresDef();
+}
+
+// ---- GERAL ----
+function getConfig() {
+  return DB.get('configuracoes')[0] || { id: 1, maoObra: 8, eletricidade: 0.15, embalagens: [], outros: [] };
+}
+
+function renderGeralDef() {
+  const cfg = getConfig();
+  document.getElementById('cfg-mao-obra').value = cfg.maoObra ?? '';
+  document.getElementById('cfg-eletricidade').value = cfg.eletricidade ?? '';
+  renderConfigRows('embalagens', cfg.embalagens || []);
+  renderConfigRows('outros', cfg.outros || []);
+}
+
+function renderConfigRows(section, items) {
+  const list = document.getElementById('cfg-' + section + '-list');
+  const empty = document.getElementById('cfg-' + section + '-empty');
+  if (!items.length) { list.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  list.innerHTML = items.map((item, i) => `
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input type="text" value="${esc(item.nome)}" placeholder="Nome" style="flex:1;"
+        oninput="updateConfigRow('${section}',${i},'nome',this.value)">
+      <input type="number" step="0.01" min="0" value="${item.custo ?? ''}" placeholder="€ 0.00" style="width:110px;"
+        oninput="updateConfigRow('${section}',${i},'custo',parseFloat(this.value)||0)">
+      <button class="btn btn-ghost" style="padding:5px 10px;color:var(--danger);" onclick="removeConfigRow('${section}',${i})">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function addConfigRow(section) {
+  const cfg = getConfig();
+  cfg[section] = [...(cfg[section] || []), { nome: '', custo: 0 }];
+  DB._cache.configuracoes = [cfg];
+  renderConfigRows(section, cfg[section]);
+}
+
+function removeConfigRow(section, index) {
+  const cfg = getConfig();
+  cfg[section] = cfg[section].filter((_, i) => i !== index);
+  DB._cache.configuracoes = [cfg];
+  renderConfigRows(section, cfg[section]);
+}
+
+function updateConfigRow(section, index, field, value) {
+  const cfg = getConfig();
+  if (cfg[section] && cfg[section][index] !== undefined) {
+    cfg[section][index][field] = value;
+    DB._cache.configuracoes = [cfg];
+    const empty = document.getElementById('cfg-' + section + '-empty');
+    if (empty) empty.style.display = 'none';
+  }
+}
+
+async function saveConfiguracoes() {
+  const cfg = getConfig();
+  cfg.maoObra = parseFloat(document.getElementById('cfg-mao-obra').value) || 0;
+  cfg.eletricidade = parseFloat(document.getElementById('cfg-eletricidade').value) || 0;
+  DB._cache.configuracoes = [cfg];
+
+  const row = _maps.configuracoes.toDb(cfg);
+  const { error } = await _sb.from('configuracoes').upsert(row, { onConflict: 'id' });
+  if (error) { console.error('Supabase config save error:', error); showToast('⚠️ Erro ao guardar configurações'); return; }
+  showToast('✅ Configurações guardadas');
 }
 
 // ---- CLIENTES ----
