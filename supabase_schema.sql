@@ -21,7 +21,14 @@ create table if not exists public.orcamentos (
   notas         text,
   preco         numeric,
   data          timestamptz default now(),
-  created_at    timestamptz default now()
+  created_at    timestamptz default now(),
+  mao_obra_min  numeric,
+  embalagem_nome text,
+  embalagem_custo numeric,
+  transporte_nome text,
+  transporte_custo numeric,
+  outros_nome   text,
+  outros_custo  numeric
 );
 
 -- TRABALHOS (Trabalhos de impressão — ligados a orçamentos aceites)

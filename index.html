@@ -827,11 +827,27 @@
       <div class="form-grid">
         <div class="form-group">
           <label>Nome da Peça</label>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <select id="orc-catalogo-sel" onchange="onOrcCatalogoSel()" style="flex:1;font-size:12px;">
+              <option value="">— Selecionar do catálogo —</option>
+            </select>
+            <button type="button" class="btn btn-ghost" style="padding:0 10px;flex-shrink:0;" onclick="openNovoProdutoDeOrcamento()" title="Novo produto no catálogo">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
           <input type="text" id="orc-nome" placeholder="Ex: Suporte parede">
         </div>
         <div class="form-group">
           <label>Cliente</label>
-          <input type="text" id="orc-cliente" placeholder="Nome do cliente">
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <select id="orc-cliente-sel" onchange="onOrcClienteSel()" style="flex:1;font-size:12px;">
+              <option value="">— Selecionar existente —</option>
+            </select>
+            <button type="button" class="btn btn-ghost" style="padding:0 10px;flex-shrink:0;" onclick="openNovoClienteDeOrcamento()" title="Novo cliente">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <input type="text" id="orc-cliente" placeholder="Ou digitar nome manualmente">
         </div>
         <div class="form-group">
           <label>Material</label>
@@ -842,7 +858,7 @@
         </div>
         <div class="form-group">
           <label>Impressora</label>
-          <select id="orc-impressora"><option value="">— Seleciona —</option></select>
+          <select id="orc-impressora" onchange="updateEletricoFromImpressora();calcOrcamento()"><option value="">— Seleciona —</option></select>
         </div>
         <div class="form-group">
           <label>Peso do Material (g)</label>
@@ -853,8 +869,12 @@
           <input type="number" id="orc-tempo" placeholder="0.0" min="0" step="0.1" oninput="calcOrcamento()">
         </div>
         <div class="form-group">
-          <label>Custo Elétrico (€/h)</label>
-          <input type="number" id="orc-eletrico" value="0.15" step="0.01" min="0" oninput="calcOrcamento()">
+          <label>Custo Elétrico (€/h) <span style="font-size:11px;color:var(--muted);font-weight:400;">— das definições</span></label>
+          <input type="number" id="orc-eletrico" step="0.001" min="0" oninput="calcOrcamento()" style="background:var(--surface2);color:var(--muted);" readonly>
+        </div>
+        <div class="form-group">
+          <label>Mão de Obra (min)</label>
+          <input type="number" id="orc-mao-obra-min" value="0" min="0" step="1" oninput="calcOrcamento()">
         </div>
         <div class="form-group">
           <label>Margem de Lucro (%)</label>
@@ -871,6 +891,24 @@
             <option value="1.1" selected>Standard (0.2mm)</option>
             <option value="1.25">Fine (0.15mm)</option>
             <option value="1.5">Ultra (0.1mm)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Embalagem</label>
+          <select id="orc-embalagem" onchange="calcOrcamento()">
+            <option value="">Nenhuma (€0.00)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Transporte</label>
+          <select id="orc-transporte" onchange="calcOrcamento()">
+            <option value="">Nenhum (€0.00)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Outros</label>
+          <select id="orc-outros" onchange="calcOrcamento()">
+            <option value="">Nenhum (€0.00)</option>
           </select>
         </div>
         <div class="form-group span-2">
@@ -1412,14 +1450,22 @@ const _maps = {
       filamento_preco: parseFloat(o.filamentoPreco) || null,
       qualidade: parseFloat(o.qualidade) || null, estado: o.estado,
       notas: o.notas || null, preco: parseFloat(o.preco) || null, data: o.data,
+      mao_obra_min: parseFloat(o.maoObraMin) || null,
+      embalagem_nome: o.embalagemNome || null, embalagem_custo: parseFloat(o.embalagemCusto) || null,
+      transporte_nome: o.transporteNome || null, transporte_custo: parseFloat(o.transporteCusto) || null,
+      outros_nome: o.outrosNome || null, outros_custo: parseFloat(o.outrosCusto) || null,
     }),
     fromDb: r => ({
       id: r.id, nome: r.nome, cliente: r.cliente || '', material: r.material || 'PLA',
       impressoraId: r.impressora_id || '', peso: r.peso?.toString() || '',
-      tempo: r.tempo?.toString() || '', eletrico: r.eletrico?.toString() || '0.15',
+      tempo: r.tempo?.toString() || '', eletrico: r.eletrico?.toString() || '0',
       margem: r.margem?.toString() || '30', filamentoPreco: r.filamento_preco?.toString() || '20',
       qualidade: r.qualidade?.toString() || '1.1', estado: r.estado || 'Pendente',
       notas: r.notas || '', preco: r.preco?.toString() || '0', data: r.data || new Date().toISOString(),
+      maoObraMin: r.mao_obra_min?.toString() || '0',
+      embalagemNome: r.embalagem_nome || '', embalagemCusto: r.embalagem_custo || 0,
+      transporteNome: r.transporte_nome || '', transporteCusto: r.transporte_custo || 0,
+      outrosNome: r.outros_nome || '', outrosCusto: r.outros_custo || 0,
     }),
   },
   trabalhos: {
@@ -1593,7 +1639,7 @@ function navigate(el) {
   const titles = { dashboard: 'Dashboard', orcamentos: 'Orçamentos', trabalhos: 'Trabalhos de Impressão', vendas: 'Registo de Vendas', filamentos: 'Filamentos', impressoras: 'Impressoras 3D', definicoes: 'Definições' };
   document.getElementById('page-title').textContent = titles[page] || page;
   if (page === 'dashboard') renderDashboard();
-  if (page === 'orcamentos') { populateImpressorasSelect(); renderOrcamentos(); }
+  if (page === 'orcamentos') { populateImpressorasSelect(); populateOrcamentoCatalogo(); populateOrcamentoClientes(); populateOrcamentoDropdowns(); renderOrcamentos(); }
   if (page === 'trabalhos') renderTrabalhos();
   if (page === 'vendas') renderVendas();
   if (page === 'filamentos') renderFilamentos();
@@ -1626,22 +1672,42 @@ function showToast(msg) {
 function calcOrcamento() {
   const peso = parseFloat(document.getElementById('orc-peso').value) || 0;
   const tempo = parseFloat(document.getElementById('orc-tempo').value) || 0;
-  const eletrico = parseFloat(document.getElementById('orc-eletrico').value) || 0.15;
+  const eletrico = parseFloat(document.getElementById('orc-eletrico').value) || 0;
   const margem = parseFloat(document.getElementById('orc-margem').value) || 30;
   const filPreco = parseFloat(document.getElementById('orc-filamento-preco').value) || 20;
   const qualidade = parseFloat(document.getElementById('orc-qualidade').value) || 1.1;
+  const maoObraMin = parseFloat(document.getElementById('orc-mao-obra-min').value) || 0;
+  const cfg = getConfig();
+  const maoObraHora = cfg.maoObra || 0;
 
   const custoMaterial = (peso / 1000) * filPreco;
   const custoEletrico = tempo * eletrico;
-  const custoBase = (custoMaterial + custoEletrico) * qualidade;
-  const custoFinal = custoBase * (1 + margem / 100);
+  const custoMaoObra = (maoObraMin / 60) * maoObraHora;
+
+  const embalagemSel = document.getElementById('orc-embalagem');
+  const transporteSel = document.getElementById('orc-transporte');
+  const outrosSel = document.getElementById('orc-outros');
+  const embalagemData = embalagemSel.value ? JSON.parse(embalagemSel.value) : { custo: 0 };
+  const transporteData = transporteSel.value ? JSON.parse(transporteSel.value) : { custo: 0 };
+  const outrosData = outrosSel.value ? JSON.parse(outrosSel.value) : { custo: 0 };
+  const custoEmbalagem = embalagemData.custo || 0;
+  const custoTransporte = transporteData.custo || 0;
+  const custoOutros = outrosData.custo || 0;
+
+  const custoBase = (custoMaterial + custoEletrico + custoMaoObra) * qualidade;
+  const custoExtras = custoEmbalagem + custoTransporte + custoOutros;
+  const custoFinal = custoBase * (1 + margem / 100) + custoExtras;
 
   document.getElementById('orc-preco-final').textContent = '€' + custoFinal.toFixed(2);
   document.getElementById('orc-breakdown').innerHTML = `
     <span style="color:var(--muted)">Material:</span><span>€${custoMaterial.toFixed(2)}</span>
     <span style="color:var(--muted)">Energia:</span><span>€${custoEletrico.toFixed(2)}</span>
+    <span style="color:var(--muted)">Mão de Obra:</span><span>€${custoMaoObra.toFixed(2)}</span>
     <span style="color:var(--muted)">Qualidade:</span><span>×${qualidade}</span>
-    <span style="color:var(--muted)">Margem:</span><span>${margem}%</span>
+    <span style="color:var(--muted)">Margem (${margem}%):</span><span>€${(custoBase * margem / 100).toFixed(2)}</span>
+    <span style="color:var(--muted)">Embalagem:</span><span>€${custoEmbalagem.toFixed(2)}</span>
+    <span style="color:var(--muted)">Transporte:</span><span>€${custoTransporte.toFixed(2)}</span>
+    <span style="color:var(--muted)">Outros:</span><span>€${custoOutros.toFixed(2)}</span>
   `;
   return custoFinal;
 }
@@ -1653,6 +1719,86 @@ function populateImpressorasSelect() {
     impressoras.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
 }
 
+function populateOrcamentoDropdowns() {
+  const cfg = getConfig();
+  const makeOptions = (items) =>
+    '<option value="">Nenhum (€0.00)</option>' +
+    (items || []).map(item =>
+      `<option value='${JSON.stringify({nome: item.nome, custo: item.custo})}'>${item.nome} — €${parseFloat(item.custo || 0).toFixed(2)}</option>`
+    ).join('');
+  document.getElementById('orc-embalagem').innerHTML = makeOptions(cfg.embalagens).replace('Nenhum', 'Nenhuma');
+  document.getElementById('orc-transporte').innerHTML = makeOptions(cfg.transportadoras);
+  document.getElementById('orc-outros').innerHTML = makeOptions(cfg.outros);
+}
+
+function updateEletricoFromImpressora() {
+  const cfg = getConfig();
+  const eletricidade = cfg.eletricidade || 0;
+  const impressoraId = document.getElementById('orc-impressora').value;
+  if (impressoraId) {
+    const imp = DB.get('impressoras').find(i => String(i.id) === String(impressoraId));
+    if (imp && imp.wPrint) {
+      document.getElementById('orc-eletrico').value = ((imp.wPrint / 1000) * eletricidade).toFixed(4);
+      return;
+    }
+  }
+  document.getElementById('orc-eletrico').value = eletricidade.toFixed(4);
+}
+
+function populateOrcamentoCatalogo() {
+  const sel = document.getElementById('orc-catalogo-sel');
+  const items = DB.get('catalogo');
+  sel.innerHTML = '<option value="">— Selecionar do catálogo —</option>' +
+    items.map(c => `<option value="${c.id}">${esc(c.nome)}${c.material ? ' · ' + esc(c.material) : ''}</option>`).join('');
+}
+
+function populateOrcamentoClientes() {
+  const sel = document.getElementById('orc-cliente-sel');
+  const clientes = DB.get('clientes');
+  sel.innerHTML = '<option value="">— Selecionar existente —</option>' +
+    clientes.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+}
+
+function onOrcCatalogoSel() {
+  const sel = document.getElementById('orc-catalogo-sel');
+  if (!sel.value) return;
+  const produto = DB.get('catalogo').find(c => String(c.id) === sel.value);
+  if (!produto) return;
+  document.getElementById('orc-nome').value = produto.nome;
+  if (produto.material) document.getElementById('orc-material').value = produto.material;
+  if (produto.margemSugerida) document.getElementById('orc-margem').value = produto.margemSugerida;
+}
+
+function onOrcClienteSel() {
+  const sel = document.getElementById('orc-cliente-sel');
+  if (!sel.value) return;
+  const cliente = DB.get('clientes').find(c => String(c.id) === sel.value);
+  if (cliente) document.getElementById('orc-cliente').value = cliente.nome;
+}
+
+// Callback flag: when true, saveCliente/saveProduto redirect back to orcamento modal
+let _orcamentoCallerActive = null; // null | 'cliente' | 'produto'
+
+function openNovoClienteDeOrcamento() {
+  _orcamentoCallerActive = 'cliente';
+  editingId.cliente = null;
+  ['cli-nome','cli-email','cli-telefone','cli-nif','cli-morada','cli-notas'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modal-cliente-title').textContent = 'Novo Cliente';
+  closeModal('modal-orcamento');
+  openModal('modal-cliente');
+}
+
+function openNovoProdutoDeOrcamento() {
+  _orcamentoCallerActive = 'produto';
+  editingId.produto = null;
+  ['prod-sku','prod-nome','prod-custo-material','prod-custo-mao-obra','prod-embalagem','prod-preco-sugerido'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('prod-categoria').value = '';
+  document.getElementById('prod-material').value = '';
+  document.getElementById('modal-produto-title').textContent = 'Novo Produto';
+  closeModal('modal-orcamento');
+  openModal('modal-produto');
+}
+
 async function saveOrcamento() {
   const nome = document.getElementById('orc-nome').value.trim();
   const cliente = document.getElementById('orc-cliente').value.trim();
@@ -1660,6 +1806,12 @@ async function saveOrcamento() {
 
   const preco = calcOrcamento();
   const existingData = editingId.orcamento ? DB.get('orcamentos').find(o => o.id === editingId.orcamento) : null;
+  const embalagemSel = document.getElementById('orc-embalagem');
+  const transporteSel = document.getElementById('orc-transporte');
+  const outrosSel = document.getElementById('orc-outros');
+  const embalagemData = embalagemSel.value ? JSON.parse(embalagemSel.value) : { nome: '', custo: 0 };
+  const transporteData = transporteSel.value ? JSON.parse(transporteSel.value) : { nome: '', custo: 0 };
+  const outrosData = outrosSel.value ? JSON.parse(outrosSel.value) : { nome: '', custo: 0 };
   const item = {
     id: editingId.orcamento || Date.now(),
     nome, cliente,
@@ -1668,9 +1820,16 @@ async function saveOrcamento() {
     peso: document.getElementById('orc-peso').value,
     tempo: document.getElementById('orc-tempo').value,
     eletrico: document.getElementById('orc-eletrico').value,
+    maoObraMin: document.getElementById('orc-mao-obra-min').value,
     margem: document.getElementById('orc-margem').value,
     filamentoPreco: document.getElementById('orc-filamento-preco').value,
     qualidade: document.getElementById('orc-qualidade').value,
+    embalagemNome: embalagemData.nome || '',
+    embalagemCusto: embalagemData.custo || 0,
+    transporteNome: transporteData.nome || '',
+    transporteCusto: transporteData.custo || 0,
+    outrosNome: outrosData.nome || '',
+    outrosCusto: outrosData.custo || 0,
     estado: document.getElementById('orc-estado').value,
     notas: document.getElementById('orc-notas').value,
     preco: preco.toFixed(2),
@@ -1690,11 +1849,21 @@ function resetOrcamentoForm() {
   document.getElementById('orc-material').value = 'PLA';
   document.getElementById('orc-peso').value = '';
   document.getElementById('orc-tempo').value = '';
-  document.getElementById('orc-eletrico').value = '0.15';
+  document.getElementById('orc-mao-obra-min').value = '0';
   document.getElementById('orc-margem').value = '30';
   document.getElementById('orc-filamento-preco').value = '20';
   document.getElementById('orc-qualidade').value = '1.1';
   document.getElementById('orc-estado').value = 'Pendente';
+  populateImpressorasSelect();
+  populateOrcamentoCatalogo();
+  populateOrcamentoClientes();
+  populateOrcamentoDropdowns();
+  document.getElementById('orc-catalogo-sel').value = '';
+  document.getElementById('orc-cliente-sel').value = '';
+  document.getElementById('orc-embalagem').value = '';
+  document.getElementById('orc-transporte').value = '';
+  document.getElementById('orc-outros').value = '';
+  updateEletricoFromImpressora();
   calcOrcamento();
   editingId.orcamento = null;
   document.getElementById('modal-orcamento-title').textContent = 'Novo Orçamento';
@@ -1711,6 +1880,7 @@ function editOrcamento(id) {
   document.getElementById('orc-peso').value = o.peso;
   document.getElementById('orc-tempo').value = o.tempo;
   document.getElementById('orc-eletrico').value = o.eletrico;
+  document.getElementById('orc-mao-obra-min').value = o.maoObraMin || '0';
   document.getElementById('orc-margem').value = o.margem;
   document.getElementById('orc-filamento-preco').value = o.filamentoPreco;
   document.getElementById('orc-qualidade').value = o.qualidade;
@@ -1718,6 +1888,31 @@ function editOrcamento(id) {
   document.getElementById('orc-notas').value = o.notas;
   populateImpressorasSelect();
   document.getElementById('orc-impressora').value = o.impressoraId || '';
+  populateOrcamentoCatalogo();
+  populateOrcamentoClientes();
+  // Try to match client by name
+  const clienteSel = document.getElementById('orc-cliente-sel');
+  const clienteMatch = DB.get('clientes').find(c => c.nome === o.cliente);
+  clienteSel.value = clienteMatch ? String(clienteMatch.id) : '';
+  document.getElementById('orc-catalogo-sel').value = '';
+  populateOrcamentoDropdowns();
+  // Restore embalagem/transporte/outros selections by matching saved nome+custo
+  const restoreSelect = (selId, nome, custo) => {
+    if (!nome) return;
+    const sel = document.getElementById(selId);
+    const matchVal = JSON.stringify({nome, custo: parseFloat(custo) || 0});
+    for (const opt of sel.options) {
+      if (opt.value) {
+        try {
+          const d = JSON.parse(opt.value);
+          if (d.nome === nome) { sel.value = opt.value; return; }
+        } catch(e) {}
+      }
+    }
+  };
+  restoreSelect('orc-embalagem', o.embalagemNome, o.embalagemCusto);
+  restoreSelect('orc-transporte', o.transporteNome, o.transporteCusto);
+  restoreSelect('orc-outros', o.outrosNome, o.outrosCusto);
   calcOrcamento();
   openModal('modal-orcamento');
 }
@@ -2949,10 +3144,19 @@ async function saveCliente() {
     notas: document.getElementById('cli-notas').value.trim(),
   };
   await DB.upsert('clientes', item);
-  closeModal('modal-cliente');
-  renderClientesDef();
   showToast(editingId.cliente ? '✅ Cliente atualizado' : '✅ Cliente adicionado');
   editingId.cliente = null;
+  if (_orcamentoCallerActive === 'cliente') {
+    _orcamentoCallerActive = null;
+    closeModal('modal-cliente');
+    populateOrcamentoClientes();
+    document.getElementById('orc-cliente-sel').value = String(item.id);
+    document.getElementById('orc-cliente').value = item.nome;
+    openModal('modal-orcamento');
+    return;
+  }
+  closeModal('modal-cliente');
+  renderClientesDef();
 }
 
 // ---- CATÁLOGO ----
@@ -3044,10 +3248,19 @@ async function saveProduto() {
     margemSugerida: margem,
   };
   await DB.upsert('catalogo', item);
-  closeModal('modal-produto');
-  renderCatalogoDef();
   showToast(editingId.produto ? '✅ Produto atualizado' : '✅ Produto adicionado');
   editingId.produto = null;
+  if (_orcamentoCallerActive === 'produto') {
+    _orcamentoCallerActive = null;
+    closeModal('modal-produto');
+    populateOrcamentoCatalogo();
+    document.getElementById('orc-catalogo-sel').value = String(item.id);
+    onOrcCatalogoSel();
+    openModal('modal-orcamento');
+    return;
+  }
+  closeModal('modal-produto');
+  renderCatalogoDef();
 }
 
 // ---- UTILIZADORES ----
