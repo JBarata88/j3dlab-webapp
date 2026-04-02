@@ -2259,7 +2259,8 @@ const DB = {
     if (idx >= 0) cache[idx] = item; else cache.push(item);
     const pkCol = collection === 'trabalhos' ? 'orcamento_id' : 'id';
     const { error } = await _sb.from(collection).upsert(_maps[collection].toDb(item), { onConflict: pkCol });
-    if (error) { console.error('Supabase upsert error:', error); showToast('⚠️ Erro ao guardar no Supabase'); }
+    if (error) { console.error('Supabase upsert error:', collection, error); showToast('⚠️ Erro ao guardar: ' + (error.message || error.code || 'desconhecido')); return false; }
+    return true;
   },
 
   async delete(collection, id) {
@@ -2545,7 +2546,8 @@ async function saveOrcamento() {
     data: existingData?.data || new Date().toISOString(),
   };
 
-  await DB.upsert('orcamentos', item);
+  const ok = await DB.upsert('orcamentos', item);
+  if (!ok) return;
   closeModal('modal-orcamento');
   resetOrcamentoForm();
   renderOrcamentos();
@@ -2775,7 +2777,8 @@ async function saveFilamento() {
     bobines: _filBobines,
   };
 
-  await DB.upsert('filamentos', item);
+  const ok = await DB.upsert('filamentos', item);
+  if (!ok) return;
   closeModal('modal-filamento');
   resetFilamentoForm();
   renderFilamentos();
@@ -2893,7 +2896,8 @@ async function saveImpressora() {
     notas: document.getElementById('imp-notas').value,
   };
 
-  await DB.upsert('impressoras', item);
+  const ok = await DB.upsert('impressoras', item);
+  if (!ok) return;
   closeModal('modal-impressora');
   resetImpressoraForm();
   renderImpressoras();
@@ -3862,7 +3866,8 @@ async function saveVenda() {
     qtd, custoUnit, custoTotal, preco, receita, lucro, margem,
     notas: document.getElementById('venda-notas').value,
   };
-  await DB.upsert('vendas', item);
+  const ok = await DB.upsert('vendas', item);
+  if (!ok) return;
   closeModal('modal-venda');
   renderVendas();
   renderDashboard();
@@ -4398,7 +4403,8 @@ async function saveCliente() {
     morada: document.getElementById('cli-morada').value.trim(),
     notas: document.getElementById('cli-notas').value.trim(),
   };
-  await DB.upsert('clientes', item);
+  const okC = await DB.upsert('clientes', item);
+  if (!okC) return;
   showToast(editingId.cliente ? '✅ Cliente atualizado' : '✅ Cliente adicionado');
   editingId.cliente = null;
   if (_orcamentoCallerActive === 'cliente') {
@@ -4647,7 +4653,8 @@ async function saveProduto() {
     margemSugerida: margem,
     filamentosUsados: _prodFilamentos,
   };
-  await DB.upsert('catalogo', item);
+  const okP = await DB.upsert('catalogo', item);
+  if (!okP) return;
   showToast(editingId.produto ? '✅ Produto atualizado' : '✅ Produto adicionado');
   editingId.produto = null;
   if (_orcamentoCallerActive === 'produto') {
