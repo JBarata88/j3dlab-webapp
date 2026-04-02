@@ -34,11 +34,15 @@ create table if not exists public.orcamentos (
 
 -- TRABALHOS (Trabalhos de impressão — ligados a orçamentos aceites)
 create table if not exists public.trabalhos (
-  orcamento_id  bigint primary key,
-  status        text default 'Para Imprimir',
-  venda_id      bigint,
-  created_at    timestamptz default now()
+  orcamento_id      bigint primary key,
+  status            text default 'Para Imprimir',
+  venda_id          bigint,
+  filamentos_usados jsonb default '[]',
+  created_at        timestamptz default now()
 );
+
+-- Migração: adicionar coluna filamentos_usados se a tabela já existir
+alter table public.trabalhos add column if not exists filamentos_usados jsonb default '[]';
 
 -- VENDAS (Registo de vendas)
 create table if not exists public.vendas (

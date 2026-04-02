@@ -497,6 +497,7 @@
                   <th>Qualidade</th>
                   <th>Margem</th>
                   <th>Preço</th>
+                  <th>Filamentos</th>
                   <th>Data Orç.</th>
                   <th>Notas</th>
                   <th></th>
@@ -1488,6 +1489,44 @@
   </div>
 </div>
 
+<!-- MODAL: FILAMENTOS DO TRABALHO -->
+<div class="modal-overlay" id="modal-trabalho-filamentos">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <h3>Filamentos Usados</h3>
+      <button class="modal-close" onclick="closeModal('modal-trabalho-filamentos')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="trab-fil-subtitle" style="color:var(--muted);font-size:12px;margin-bottom:16px;"></p>
+
+      <!-- Lista de filamentos associados -->
+      <div id="trab-fil-list" style="margin-bottom:20px;display:flex;flex-direction:column;gap:8px;"></div>
+
+      <!-- Formulário para adicionar -->
+      <div style="background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:14px;">
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:10px;">Adicionar Filamento</p>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:160px;">
+            <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Filamento</label>
+            <select id="trab-fil-select" style="width:100%;"></select>
+          </div>
+          <div style="width:110px;">
+            <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Peso usado (g)</label>
+            <input id="trab-fil-peso" type="number" min="0" step="1" placeholder="ex: 45" style="width:100%;">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="addFilamentoAoTrabalho()" style="flex-shrink:0;height:38px;">Adicionar</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-trabalho-filamentos')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFilamentosTrabalho()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOADING -->
 <div id="app-loading" style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px;">
   <img src="logos/Logo_horizontal_branco.png" style="max-width:160px;opacity:0.9;" onerror="this.style.display='none'">
@@ -1571,8 +1610,8 @@ const _maps = {
     }),
   },
   trabalhos: {
-    toDb: t => ({ orcamento_id: t.orcamentoId, status: t.status, venda_id: t.vendaId || null }),
-    fromDb: r => ({ orcamentoId: r.orcamento_id, status: r.status || 'Para Imprimir', vendaId: r.venda_id || null }),
+    toDb: t => ({ orcamento_id: t.orcamentoId, status: t.status, venda_id: t.vendaId || null, filamentos_usados: t.filamentosUsados || [] }),
+    fromDb: r => ({ orcamentoId: r.orcamento_id, status: r.status || 'Para Imprimir', vendaId: r.venda_id || null, filamentosUsados: r.filamentos_usados || [] }),
   },
   vendas: {
     toDb: v => ({
@@ -2677,6 +2716,10 @@ function renderTrabalhos() {
     const ss = statusStyles[st] || statusStyles['Para Imprimir'];
     const isDone = st === 'Concluído';
     const rowOpacity = isDone ? 'opacity:0.55;' : '';
+    const fils = d.trabalho.filamentosUsados || [];
+    const filBtn = fils.length > 0
+      ? `<button class="btn btn-ghost btn-sm" onclick="openFilamentosModal(${d.id})" style="color:var(--brand);font-weight:600;">${fils.length} fil.</button>`
+      : `<button class="btn btn-ghost btn-sm" onclick="openFilamentosModal(${d.id})" style="color:var(--muted);">+ Associar</button>`;
     return `<tr style="${rowOpacity}">
       <td>
         <select
@@ -2696,6 +2739,7 @@ function renderTrabalhos() {
       <td style="color:var(--muted);font-size:12px;">${qualLabels[String(d.qualidade)] || d.qualidade || '—'}</td>
       <td style="color:var(--muted);font-size:12px;">${d.margem ? d.margem + '%' : '—'}</td>
       <td><strong style="color:var(--brand)">€${d.preco}</strong></td>
+      <td>${filBtn}</td>
       <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${fmtDate(d.data)}</td>
       <td style="color:var(--muted);font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(d.notas)}">${esc(d.notas) || '—'}</td>
       <td>
@@ -2748,6 +2792,23 @@ async function updateTrabalhoStatus(orcamentoId, newStatus) {
     }
   }
 
+  // Deduct filament weight when marked Concluído (only once, same guard as venda)
+  if (newStatus === 'Concluído' && !old.vendaId) {
+    const filamentosUsados = old.filamentosUsados || [];
+    for (const item of filamentosUsados) {
+      const filamentos = DB.get('filamentos');
+      const fil = filamentos.find(f => f.id === item.filamentoId);
+      if (!fil) continue;
+      const novoRestante = Math.max(0, (parseFloat(fil.pesoRestante) || 0) - (parseFloat(item.peso) || 0));
+      const pesoTotal = parseFloat(fil.pesoTotal) || 1000;
+      let novoEstado = fil.estado;
+      if (novoRestante <= 0) novoEstado = 'Esgotado';
+      else if (novoRestante / pesoTotal < 0.25) novoEstado = 'Baixo Stock';
+      await DB.upsert('filamentos', { ...fil, pesoRestante: novoRestante, estado: novoEstado });
+    }
+    if (filamentosUsados.length) renderFilamentos();
+  }
+
   await DB.upsert('trabalhos', updated);
   renderTrabalhos();
   renderDashboard();
@@ -2765,6 +2826,96 @@ function updateTrabalhosSummary(trabalhos) {
     <span>·</span>
     <span style="color:var(--success);font-weight:600;">${counts['Concluído']} concluído${counts['Concluído']!==1?'s':''}</span>
   `;
+}
+
+// ===================== FILAMENTOS DO TRABALHO =====================
+let _trabFilModal = { orcamentoId: null, filamentos: [] };
+
+function openFilamentosModal(orcamentoId) {
+  const trabalhos = DB.get('trabalhos');
+  const trab = trabalhos.find(t => t.orcamentoId === orcamentoId);
+  const orc = DB.get('orcamentos').find(o => o.id === orcamentoId);
+
+  _trabFilModal.orcamentoId = orcamentoId;
+  _trabFilModal.filamentos = JSON.parse(JSON.stringify(trab?.filamentosUsados || []));
+
+  const subtitle = document.getElementById('trab-fil-subtitle');
+  if (subtitle && orc) subtitle.textContent = `Trabalho: ${orc.nome}${orc.cliente ? ' · ' + orc.cliente : ''}`;
+
+  // Populate filament select
+  const sel = document.getElementById('trab-fil-select');
+  const filamentos = DB.get('filamentos');
+  sel.innerHTML = '<option value="">— Selecionar filamento —</option>' +
+    filamentos.map(f => {
+      const label = `${f.marca} ${f.material}${f.corNome ? ' · ' + f.corNome : ''} (${f.pesoRestante}g restantes)`;
+      return `<option value="${f.id}">${esc(label)}</option>`;
+    }).join('');
+
+  renderTrabFilList();
+  openModal('modal-trabalho-filamentos');
+}
+
+function renderTrabFilList() {
+  const container = document.getElementById('trab-fil-list');
+  if (!container) return;
+  const filamentos = DB.get('filamentos');
+
+  if (!_trabFilModal.filamentos.length) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:12px;text-align:center;padding:12px 0;">Nenhum filamento associado.</p>`;
+    return;
+  }
+
+  container.innerHTML = _trabFilModal.filamentos.map((item, idx) => {
+    const fil = filamentos.find(f => f.id === item.filamentoId);
+    const label = fil
+      ? `${fil.marca} ${fil.material}${fil.corNome ? ' · ' + fil.corNome : ''}`
+      : `Filamento #${item.filamentoId}`;
+    const colorDot = fil
+      ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${fil.corHex};border:1px solid rgba(255,255,255,0.2);margin-right:6px;flex-shrink:0;"></span>`
+      : '';
+    return `<div style="display:flex;align-items:center;gap:10px;background:var(--elevated);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+      <div style="display:flex;align-items:center;flex:1;min-width:0;">
+        ${colorDot}
+        <span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(label)}</span>
+      </div>
+      <span style="font-size:13px;font-weight:700;color:var(--brand);white-space:nowrap;">${item.peso}g</span>
+      <button class="btn btn-ghost btn-sm" onclick="_trabFilModal.filamentos.splice(${idx},1);renderTrabFilList();" style="color:var(--danger);padding:4px 8px;">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addFilamentoAoTrabalho() {
+  const sel = document.getElementById('trab-fil-select');
+  const pesoInput = document.getElementById('trab-fil-peso');
+  const filamentoId = parseInt(sel.value);
+  const peso = parseFloat(pesoInput.value);
+
+  if (!filamentoId) { showToast('⚠️ Seleciona um filamento'); return; }
+  if (!peso || peso <= 0) { showToast('⚠️ Introduz um peso válido'); return; }
+
+  // Check if already added, if so update weight
+  const existing = _trabFilModal.filamentos.find(f => f.filamentoId === filamentoId);
+  if (existing) {
+    existing.peso = peso;
+  } else {
+    _trabFilModal.filamentos.push({ filamentoId, peso });
+  }
+
+  sel.value = '';
+  pesoInput.value = '';
+  renderTrabFilList();
+}
+
+async function saveFilamentosTrabalho() {
+  const trabalhos = DB.get('trabalhos');
+  const idx = trabalhos.findIndex(t => t.orcamentoId === _trabFilModal.orcamentoId);
+  if (idx === -1) return;
+
+  const updated = { ...trabalhos[idx], filamentosUsados: _trabFilModal.filamentos };
+  await DB.upsert('trabalhos', updated);
+  closeModal('modal-trabalho-filamentos');
+  renderTrabalhos();
+  showToast('✅ Filamentos guardados');
 }
 
 // ===================== VENDAS =====================
