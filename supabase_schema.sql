@@ -114,8 +114,9 @@ create table if not exists public.configuracoes (
   id            bigint primary key default 1,
   mao_obra      numeric default 8,
   eletricidade  numeric default 0.15,
-  embalagens    jsonb default '[]',
-  outros        jsonb default '[]',
+  embalagens      jsonb default '[]',
+  outros          jsonb default '[]',
+  transportadoras jsonb default '[]',
   created_at    timestamptz default now()
 );
 
