@@ -2810,7 +2810,8 @@ async function updateTrabalhoStatus(orcamentoId, newStatus) {
         material: orc.material,
         qtd, custoUnit, custoTotal, preco, receita, lucro,
         margem: margemReal,
-        notas: orc.cliente || '',
+        cliente: orc.cliente || '',
+        notas: orc.notas || '',
       };
       await DB.upsert('vendas', venda);
       updated.vendaId = vendaId;
