@@ -504,6 +504,7 @@
                   <th>#</th>
                   <th>Data</th>
                   <th>Produto / Descrição</th>
+                  <th>Cliente</th>
                   <th>Categoria</th>
                   <th>Material</th>
                   <th style="text-align:center;">Qtd</th>
@@ -1141,6 +1142,18 @@
           <datalist id="venda-produto-list"></datalist>
         </div>
         <div class="form-group">
+          <label>Cliente</label>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <select id="venda-cliente-sel" onchange="onVendaClienteSel()" style="flex:1;font-size:12px;">
+              <option value="">— Selecionar existente —</option>
+            </select>
+            <button type="button" class="btn btn-ghost" style="padding:0 10px;flex-shrink:0;" onclick="openNovoClienteDeVenda()" title="Novo cliente">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <input type="text" id="venda-cliente" placeholder="Ou digitar nome manualmente">
+        </div>
+        <div class="form-group">
           <label>Categoria</label>
           <select id="venda-categoria">
             <option>Funcional</option>
@@ -1482,13 +1495,13 @@ const _maps = {
       qtd: parseFloat(v.qtd) || 1, custo_unit: parseFloat(v.custoUnit) || 0,
       custo_total: parseFloat(v.custoTotal) || 0, preco: parseFloat(v.preco) || 0,
       receita: parseFloat(v.receita) || 0, lucro: parseFloat(v.lucro) || 0,
-      margem: parseFloat(v.margem) || 0, notas: v.notas || null,
+      margem: parseFloat(v.margem) || 0, notas: v.notas || null, cliente: v.cliente || null,
     }),
     fromDb: r => ({
       id: r.id, data: r.data, produto: r.produto, categoria: r.categoria || 'Funcional',
       material: r.material || 'PLA', qtd: r.qtd || 1, custoUnit: r.custo_unit || 0,
       custoTotal: r.custo_total || 0, preco: r.preco || 0, receita: r.receita || 0,
-      lucro: r.lucro || 0, margem: r.margem || 0, notas: r.notas || '',
+      lucro: r.lucro || 0, margem: r.margem || 0, notas: r.notas || '', cliente: r.cliente || '',
     }),
   },
   filamentos: {
@@ -1647,7 +1660,7 @@ function navigate(el) {
   if (page === 'dashboard') renderDashboard();
   if (page === 'orcamentos') { populateImpressorasSelect(); populateOrcamentoCatalogo(); populateOrcamentoClientes(); populateOrcamentoDropdowns(); renderOrcamentos(); }
   if (page === 'trabalhos') renderTrabalhos();
-  if (page === 'vendas') renderVendas();
+  if (page === 'vendas') { populateVendaClientes(); renderVendas(); }
   if (page === 'filamentos') renderFilamentos();
   if (page === 'impressoras') { renderImpressoras(); renderCatalog(); }
   if (page === 'definicoes') renderDefinicoes();
@@ -2642,6 +2655,30 @@ function updateTrabalhosSummary(trabalhos) {
 }
 
 // ===================== VENDAS =====================
+function populateVendaClientes() {
+  const sel = document.getElementById('venda-cliente-sel');
+  const clientes = DB.get('clientes');
+  sel.innerHTML = '<option value="">— Selecionar existente —</option>' +
+    clientes.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+}
+
+function onVendaClienteSel() {
+  const sel = document.getElementById('venda-cliente-sel');
+  if (!sel.value) return;
+  const cliente = DB.get('clientes').find(c => String(c.id) === sel.value);
+  if (cliente) document.getElementById('venda-cliente').value = cliente.nome;
+}
+
+function openNovoClienteDeVenda() {
+  _orcamentoCallerActive = 'venda-cliente';
+  editingId.cliente = null;
+  ['cli-nome','cli-email','cli-telefone','cli-nif','cli-morada','cli-notas'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cli-cliente-id').value = gerarClienteId();
+  document.getElementById('modal-cliente-title').textContent = 'Novo Cliente';
+  closeModal('modal-venda');
+  openModal('modal-cliente');
+}
+
 function openNovaVenda() {
   editingId.venda = null;
   document.getElementById('modal-venda-title').textContent = 'Nova Venda';
@@ -2653,7 +2690,10 @@ function openNovaVenda() {
   document.getElementById('venda-custo-unit').value = '';
   document.getElementById('venda-preco').value = '';
   document.getElementById('venda-notas').value = '';
+  document.getElementById('venda-cliente').value = '';
   populateCatalogDatalist();
+  populateVendaClientes();
+  document.getElementById('venda-cliente-sel').value = '';
   calcVenda();
   openModal('modal-venda');
 }
@@ -2708,6 +2748,7 @@ async function saveVenda() {
     id: editingId.venda || Date.now(),
     data: document.getElementById('venda-data').value,
     produto,
+    cliente: document.getElementById('venda-cliente').value.trim(),
     categoria: document.getElementById('venda-categoria').value,
     material: document.getElementById('venda-material').value,
     qtd, custoUnit, custoTotal, preco, receita, lucro, margem,
@@ -2733,7 +2774,11 @@ function editVenda(id) {
   document.getElementById('venda-custo-unit').value = v.custoUnit;
   document.getElementById('venda-preco').value = v.preco;
   document.getElementById('venda-notas').value = v.notas || '';
+  document.getElementById('venda-cliente').value = v.cliente || '';
   populateCatalogDatalist();
+  populateVendaClientes();
+  const clienteMatch = DB.get('clientes').find(c => c.nome === v.cliente);
+  document.getElementById('venda-cliente-sel').value = clienteMatch ? String(clienteMatch.id) : '';
   calcVenda();
   openModal('modal-venda');
 }
@@ -2751,7 +2796,11 @@ function cloneVenda(id) {
   document.getElementById('venda-custo-unit').value = v.custoUnit;
   document.getElementById('venda-preco').value = v.preco;
   document.getElementById('venda-notas').value = v.notas || '';
+  document.getElementById('venda-cliente').value = v.cliente || '';
   populateCatalogDatalist();
+  populateVendaClientes();
+  const clienteMatchClone = DB.get('clientes').find(c => c.nome === v.cliente);
+  document.getElementById('venda-cliente-sel').value = clienteMatchClone ? String(clienteMatchClone.id) : '';
   calcVenda();
   openModal('modal-venda');
 }
@@ -2782,6 +2831,7 @@ function renderVendas() {
       <td style="color:var(--muted);font-size:12px;">${i + 1}</td>
       <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${fmtDate(v.data)}</td>
       <td><strong>${esc(v.produto)}</strong></td>
+      <td style="color:var(--muted);font-size:12px;">${esc(v.cliente) || '—'}</td>
       <td><span class="badge badge-neutral" style="color:${catColors[v.categoria] || 'var(--muted)'}">${esc(v.categoria)}</span></td>
       <td style="color:var(--muted);font-size:12px;">${esc(v.material)}</td>
       <td style="text-align:center;">${v.qtd}</td>
@@ -3174,6 +3224,15 @@ async function saveCliente() {
     document.getElementById('orc-cliente-sel').value = String(item.id);
     document.getElementById('orc-cliente').value = item.nome;
     openModal('modal-orcamento');
+    return;
+  }
+  if (_orcamentoCallerActive === 'venda-cliente') {
+    _orcamentoCallerActive = null;
+    closeModal('modal-cliente');
+    populateVendaClientes();
+    document.getElementById('venda-cliente-sel').value = String(item.id);
+    document.getElementById('venda-cliente').value = item.nome;
+    openModal('modal-venda');
     return;
   }
   closeModal('modal-cliente');

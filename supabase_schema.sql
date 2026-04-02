@@ -54,6 +54,7 @@ create table if not exists public.vendas (
   lucro         numeric,
   margem        numeric,
   notas         text,
+  cliente       text,
   created_at    timestamptz default now()
 );
 
