@@ -2875,16 +2875,49 @@ function renderTrabalhos() {
       <td>${filBtn}</td>
       <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${fmtDate(d.data)}</td>
       <td style="color:var(--muted);font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(d.notas)}">${esc(d.notas) || '—'}</td>
-      <td>
+      <td style="display:flex;gap:6px;align-items:center;">
         ${isDone && d.trabalho.vendaId
           ? `<span style="font-size:11px;color:var(--success);font-weight:600;">✓ Em vendas</span>`
           : `<button class="btn btn-ghost btn-sm" onclick="editOrcamento(${d.id})">Editar</button>`
+        }
+        ${getSession()?.nivel === 'Admin'
+          ? `<button class="btn btn-ghost btn-sm" onclick="deleteTrabalho(${d.id})" style="color:var(--danger);padding:4px 8px;" title="Eliminar trabalho">✕</button>`
+          : ''
         }
       </td>
     </tr>`;
   }).join('');
 
   updateTrabalhosSummary(cleanTrabalhos);
+}
+
+function deleteTrabalho(orcamentoId) {
+  openModal('modal-delete');
+  document.getElementById('confirm-delete-btn').onclick = async () => {
+    const trabalho = DB.get('trabalhos').find(t => t.orcamentoId === orcamentoId);
+    // Restore filament weights if the job was Concluído (weights were already deducted)
+    if (trabalho && trabalho.status === 'Concluído') {
+      const filamentosUsados = trabalho.filamentosUsados || [];
+      for (const item of filamentosUsados) {
+        const fil = DB.get('filamentos').find(f => f.id === item.filamentoId);
+        if (!fil) continue;
+        const pesoTotal = parseFloat(fil.pesoTotal) || 1000;
+        const novoRestante = Math.min(pesoTotal, (parseFloat(fil.pesoRestante) || 0) + (parseFloat(item.peso) || 0));
+        let novoEstado;
+        if (novoRestante <= 0) novoEstado = 'Esgotado';
+        else if (novoRestante / pesoTotal < 0.25) novoEstado = 'Baixo Stock';
+        else novoEstado = 'Disponível';
+        await DB.upsert('filamentos', { ...fil, pesoRestante: novoRestante, estado: novoEstado });
+      }
+      if (filamentosUsados.length) renderFilamentos();
+    }
+    await DB.delete('trabalhos', orcamentoId);
+    DB._cache['trabalhos'] = DB._cache['trabalhos'].filter(t => t.orcamentoId !== orcamentoId);
+    closeModal('modal-delete');
+    renderTrabalhos();
+    renderDashboard();
+    showToast('Trabalho eliminado.');
+  };
 }
 
 async function updateTrabalhoStatus(orcamentoId, newStatus) {
