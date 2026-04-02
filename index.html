@@ -118,7 +118,7 @@
   .stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
   .stat-value {
     font-family: 'Syne', sans-serif;
-    font-size: clamp(14px, 11cqi, 26px);
+    font-size: clamp(22px, 11cqi, 38px);
     font-weight: 800; color: var(--text); line-height: 1.1;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -2465,6 +2465,7 @@ function renderDashboard() {
   const filamentos = DB.get('filamentos');
   const impressoras = DB.get('impressoras');
   const vendas = DB.get('vendas');
+  const clientes = DB.get('clientes');
 
   const totalReceita = orcamentos.filter(o => o.estado === 'Aceite').reduce((s, o) => s + parseFloat(o.preco || 0), 0);
   const orcAceites = orcamentos.filter(o => o.estado === 'Aceite').length;
@@ -2495,9 +2496,9 @@ function renderDashboard() {
       <div class="stat-sub">total de lucro</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Filamentos</div>
-      <div class="stat-value">${filamentos.length}</div>
-      <div class="stat-sub">${filBaixo > 0 ? `<span style="color:var(--warning)">${filBaixo} em baixo stock</span>` : 'stock ok'}</div>
+      <div class="stat-label">Clientes</div>
+      <div class="stat-value">${clientes.length}</div>
+      <div class="stat-sub">clientes registados</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Impressoras</div>
