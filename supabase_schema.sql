@@ -125,6 +125,7 @@ create table if not exists public.configuracoes (
   embalagens      jsonb default '[]',
   outros          jsonb default '[]',
   transportadoras jsonb default '[]',
+  categorias      jsonb default '[]',
   created_at    timestamptz default now()
 );
 

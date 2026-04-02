@@ -647,6 +647,10 @@
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
             Catálogo
           </button>
+          <button class="def-tab" data-tab="categorias" onclick="switchDefTab(this)">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Categorias
+          </button>
           <button class="def-tab" data-tab="utilizadores" onclick="switchDefTab(this)">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Utilizadores
@@ -772,6 +776,32 @@
             <div id="catalogo-def-empty" class="empty-state" style="display:none;padding:32px 24px;">
               <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
               <p>Catálogo vazio. Adiciona o primeiro produto!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CATEGORIAS TAB -->
+        <div id="def-tab-categorias" class="def-tab-content" style="display:none;">
+          <div style="max-width:560px;display:flex;flex-direction:column;gap:24px;">
+            <div class="card" style="padding:24px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <div>
+                  <h4 style="font-size:14px;font-weight:700;">Categorias de Produtos</h4>
+                  <p style="color:var(--muted);font-size:12px;margin-top:4px;">Usadas em vendas, catálogo e relatórios</p>
+                </div>
+                <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="addCategoriaRow()">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Adicionar
+                </button>
+              </div>
+              <div id="cfg-categorias-list" style="display:flex;flex-direction:column;gap:8px;margin-top:16px;"></div>
+              <div id="cfg-categorias-empty" style="color:var(--muted);font-size:13px;padding:8px 0;">Sem categorias definidas.</div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;">
+              <button class="btn btn-primary" style="padding:10px 28px;" onclick="saveCategoriasConfig()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Guardar Categorias
+              </button>
             </div>
           </div>
         </div>
@@ -1566,6 +1596,7 @@ const _maps = {
       embalagens: c.embalagens || [],
       outros: c.outros || [],
       transportadoras: c.transportadoras || [],
+      categorias: c.categorias || [],
     }),
     fromDb: r => ({
       id: 1,
@@ -1574,6 +1605,7 @@ const _maps = {
       embalagens: r.embalagens || [],
       outros: r.outros || [],
       transportadoras: r.transportadoras || [],
+      categorias: r.categorias || [],
     }),
   },
   clientes: {
@@ -3070,12 +3102,13 @@ function renderDefinicoes() {
   renderGeralDef();
   renderClientesDef();
   renderCatalogoDef();
+  renderCategoriasDef();
   renderUtilizadoresDef();
 }
 
 // ---- GERAL ----
 function getConfig() {
-  return DB.get('configuracoes')[0] || { id: 1, maoObra: 8, eletricidade: 0.15, embalagens: [], outros: [], transportadoras: [] };
+  return DB.get('configuracoes')[0] || { id: 1, maoObra: 8, eletricidade: 0.15, embalagens: [], outros: [], transportadoras: [], categorias: [] };
 }
 
 function renderGeralDef() {
@@ -3138,6 +3171,59 @@ async function saveConfiguracoes() {
   const { error } = await _sb.from('configuracoes').upsert(row, { onConflict: 'id' });
   if (error) { console.error('Supabase config save error:', error); showToast('⚠️ Erro ao guardar configurações'); return; }
   showToast('✅ Configurações guardadas');
+}
+
+// ---- CATEGORIAS ----
+function renderCategoriasDef() {
+  const cfg = getConfig();
+  renderCategoryRows(cfg.categorias || []);
+}
+
+function renderCategoryRows(items) {
+  const list = document.getElementById('cfg-categorias-list');
+  const empty = document.getElementById('cfg-categorias-empty');
+  if (!items.length) { list.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  list.innerHTML = items.map((item, i) => `
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input type="text" value="${esc(item.nome)}" placeholder="Nome da categoria" style="flex:1;"
+        oninput="updateCategoriaRow(${i},this.value)">
+      <button class="btn btn-ghost" style="padding:5px 10px;color:var(--danger);" onclick="removeCategoriaRow(${i})">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function addCategoriaRow() {
+  const cfg = getConfig();
+  cfg.categorias = [...(cfg.categorias || []), { nome: '' }];
+  DB._cache.configuracoes = [cfg];
+  renderCategoryRows(cfg.categorias);
+}
+
+function removeCategoriaRow(index) {
+  const cfg = getConfig();
+  cfg.categorias = cfg.categorias.filter((_, i) => i !== index);
+  DB._cache.configuracoes = [cfg];
+  renderCategoryRows(cfg.categorias);
+}
+
+function updateCategoriaRow(index, value) {
+  const cfg = getConfig();
+  if (cfg.categorias && cfg.categorias[index] !== undefined) {
+    cfg.categorias[index].nome = value;
+    DB._cache.configuracoes = [cfg];
+    document.getElementById('cfg-categorias-empty').style.display = 'none';
+  }
+}
+
+async function saveCategoriasConfig() {
+  const cfg = getConfig();
+  DB._cache.configuracoes = [cfg];
+  const row = _maps.configuracoes.toDb(cfg);
+  const { error } = await _sb.from('configuracoes').upsert(row, { onConflict: 'id' });
+  if (error) { console.error('Supabase categorias save error:', error); showToast('⚠️ Erro ao guardar categorias'); return; }
+  showToast('✅ Categorias guardadas');
 }
 
 // ---- CLIENTES ----
