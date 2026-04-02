@@ -35,6 +35,8 @@ create table if not exists public.orcamentos (
 
 -- Migração: adicionar coluna preco_final se a tabela já existir
 alter table public.orcamentos add column if not exists preco_final numeric;
+-- Migração: filamentos usados no orçamento (para passar ao trabalho)
+alter table public.orcamentos add column if not exists filamentos_usados jsonb default '[]';
 
 -- TRABALHOS (Trabalhos de impressão — ligados a orçamentos aceites)
 create table if not exists public.trabalhos (
@@ -123,8 +125,22 @@ create table if not exists public.catalogo (
   custo_total     numeric,
   preco_sugerido  numeric,
   margem_sugerida numeric,
+  filamentos_usados jsonb default '[]',
+  embalagem_nome  text,
+  transporte_nome text,
+  transporte_custo numeric,
+  outros_nome     text,
+  outros_custo    numeric,
   created_at      timestamptz default now()
 );
+
+-- Migração: novas colunas no catálogo
+alter table public.catalogo add column if not exists filamentos_usados jsonb default '[]';
+alter table public.catalogo add column if not exists embalagem_nome text;
+alter table public.catalogo add column if not exists transporte_nome text;
+alter table public.catalogo add column if not exists transporte_custo numeric;
+alter table public.catalogo add column if not exists outros_nome text;
+alter table public.catalogo add column if not exists outros_custo numeric;
 
 -- CONFIGURACOES (Configurações gerais da app — linha única id=1)
 create table if not exists public.configuracoes (

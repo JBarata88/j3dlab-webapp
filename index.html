@@ -1356,7 +1356,7 @@
 
 <!-- MODAL: PRODUTO (CATÁLOGO) -->
 <div class="modal-overlay" id="modal-produto">
-  <div class="modal" style="width:560px;">
+  <div class="modal" style="width:600px;">
     <div class="modal-header">
       <h3 id="modal-produto-title">Novo Produto</h3>
       <button class="modal-close" onclick="closeModal('modal-produto')">
@@ -1371,9 +1371,7 @@
         </div>
         <div class="form-group">
           <label>Categoria</label>
-          <select id="prod-categoria">
-            <option value="">Selecionar…</option>
-          </select>
+          <select id="prod-categoria"><option value="">Selecionar…</option></select>
         </div>
         <div class="form-group" style="grid-column:1/-1;">
           <label>Nome *</label>
@@ -1396,15 +1394,43 @@
           <input id="prod-custo-mao-obra" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
         </div>
         <div class="form-group">
-          <label>Embalagem (€)</label>
-          <input id="prod-embalagem" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
-        </div>
-        <div class="form-group">
           <label>Preço Sugerido (€)</label>
           <input id="prod-preco-sugerido" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
         </div>
+        <div class="form-group">
+          <label>Embalagem</label>
+          <select id="prod-embalagem-sel" onchange="calcProduto()"><option value="">Nenhuma (€0.00)</option></select>
+        </div>
+        <div class="form-group">
+          <label>Transporte</label>
+          <select id="prod-transporte-sel" onchange="calcProduto()"><option value="">Nenhum (€0.00)</option></select>
+        </div>
+        <div class="form-group">
+          <label>Outros</label>
+          <select id="prod-outros-sel" onchange="calcProduto()"><option value="">Nenhum (€0.00)</option></select>
+        </div>
       </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;gap:32px;margin-top:4px;">
+
+      <!-- Filamentos usados -->
+      <div style="margin-top:16px;">
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:10px;">Filamentos Usados</p>
+        <div id="prod-fil-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+        <div style="background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:12px;">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div style="flex:1;min-width:140px;">
+              <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Filamento</label>
+              <select id="prod-fil-select" style="width:100%;"></select>
+            </div>
+            <div style="width:100px;">
+              <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Peso (g)</label>
+              <input id="prod-fil-peso" type="number" min="0" step="1" placeholder="ex: 45" style="width:100%;">
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="addFilamentoAoProduto()" style="height:38px;flex-shrink:0;">+ Adicionar</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;gap:32px;margin-top:16px;">
         <div>
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;">Custo Total</div>
           <div id="prod-cr-custo" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--danger);">€0.00</div>
@@ -1599,6 +1625,7 @@ const _maps = {
       transporte_nome: o.transporteNome || null, transporte_custo: parseFloat(o.transporteCusto) || null,
       outros_nome: o.outrosNome || null, outros_custo: parseFloat(o.outrosCusto) || null,
       preco_final: parseFloat(o.precoFinal) || null,
+      filamentos_usados: o.filamentosUsados || [],
     }),
     fromDb: r => ({
       id: r.id, nome: r.nome, cliente: r.cliente || '', material: r.material || 'PLA',
@@ -1613,6 +1640,7 @@ const _maps = {
       transporteNome: r.transporte_nome || '', transporteCusto: r.transporte_custo || 0,
       outrosNome: r.outros_nome || '', outrosCusto: r.outros_custo || 0,
       precoFinal: r.preco_final?.toString() || '',
+      filamentosUsados: r.filamentos_usados || [],
     }),
   },
   trabalhos: {
@@ -1676,16 +1704,22 @@ const _maps = {
     toDb: c => ({
       id: c.id, sku: c.sku || null, nome: c.nome, categoria: c.categoria || null,
       material: c.material || null, custo_material: parseFloat(c.custoMaterial) || null,
-      custo_mao_obra: parseFloat(c.custoMaoObra) || null, embalagem: parseFloat(c.embalagem) || null,
+      custo_mao_obra: parseFloat(c.custoMaoObra) || null,
+      embalagem: parseFloat(c.embalagemCusto) || null, embalagem_nome: c.embalagemNome || null,
+      transporte_nome: c.transporteNome || null, transporte_custo: parseFloat(c.transporteCusto) || null,
+      outros_nome: c.outrosNome || null, outros_custo: parseFloat(c.outrosCusto) || null,
       custo_total: parseFloat(c.custoTotal) || null, preco_sugerido: parseFloat(c.precoSugerido) || null,
-      margem_sugerida: parseFloat(c.margemSugerida) || null,
+      margem_sugerida: parseFloat(c.margemSugerida) || null, filamentos_usados: c.filamentosUsados || [],
     }),
     fromDb: r => ({
       id: r.id, sku: r.sku || '', nome: r.nome, categoria: r.categoria || '',
       material: r.material || '', custoMaterial: r.custo_material || 0,
-      custoMaoObra: r.custo_mao_obra || 0, embalagem: r.embalagem || 0,
+      custoMaoObra: r.custo_mao_obra || 0,
+      embalagemNome: r.embalagem_nome || '', embalagemCusto: r.embalagem || 0,
+      transporteNome: r.transporte_nome || '', transporteCusto: r.transporte_custo || 0,
+      outrosNome: r.outros_nome || '', outrosCusto: r.outros_custo || 0,
       custoTotal: r.custo_total || 0, precoSugerido: r.preco_sugerido || 0,
-      margemSugerida: r.margem_sugerida || 0,
+      margemSugerida: r.margem_sugerida || 0, filamentosUsados: r.filamentos_usados || [],
     }),
   },
   configuracoes: {
@@ -1779,6 +1813,7 @@ const DB = {
 };
 
 let editingId = { orcamento: null, filamento: null, impressora: null, venda: null, cliente: null, produto: null, utilizador: null };
+let _orcFilamentosUsados = [];
 
 // ===================== MOBILE SIDEBAR =====================
 function toggleSidebar() {
@@ -1935,6 +1970,20 @@ function onOrcCatalogoSel() {
   document.getElementById('orc-nome').value = produto.nome;
   if (produto.material) document.getElementById('orc-material').value = produto.material;
   if (produto.margemSugerida) document.getElementById('orc-margem').value = produto.margemSugerida;
+  // Auto-populate embalagem/transporte/outros from catalog product
+  const restoreOrcSel = (selId, nome) => {
+    if (!nome) return;
+    const s = document.getElementById(selId);
+    for (const opt of s.options) {
+      if (opt.value) { try { if (JSON.parse(opt.value).nome === nome) { s.value = opt.value; return; } } catch(e){} }
+    }
+  };
+  restoreOrcSel('orc-embalagem', produto.embalagemNome);
+  restoreOrcSel('orc-transporte', produto.transporteNome);
+  restoreOrcSel('orc-outros', produto.outrosNome);
+  // Store filamentosUsados from catalog into orçamento state
+  _orcFilamentosUsados = JSON.parse(JSON.stringify(produto.filamentosUsados || []));
+  calcOrcamento();
 }
 
 function onOrcClienteSel() {
@@ -2006,6 +2055,7 @@ async function saveOrcamento() {
     notas: document.getElementById('orc-notas').value,
     preco: preco.toFixed(2),
     precoFinal: document.getElementById('orc-preco-venda').value,
+    filamentosUsados: _orcFilamentosUsados,
     data: existingData?.data || new Date().toISOString(),
   };
 
@@ -2019,6 +2069,7 @@ async function saveOrcamento() {
 
 function resetOrcamentoForm() {
   ['orc-nome','orc-cliente','orc-notas','orc-preco-venda'].forEach(id => document.getElementById(id).value = '');
+  _orcFilamentosUsados = [];
   document.getElementById('orc-material').value = 'PLA';
   document.getElementById('orc-peso').value = '';
   document.getElementById('orc-tempo').value = '';
@@ -2065,6 +2116,7 @@ function editOrcamento(id) {
   document.getElementById('orc-categoria').insertAdjacentHTML('afterbegin', '<option value="">Sem categoria</option>');
   document.getElementById('orc-notas').value = o.notas;
   document.getElementById('orc-preco-venda').value = o.precoFinal || '';
+  _orcFilamentosUsados = JSON.parse(JSON.stringify(o.filamentosUsados || []));
   populateImpressorasSelect();
   document.getElementById('orc-impressora').value = o.impressoraId || '';
   populateOrcamentoCatalogo();
@@ -2693,7 +2745,7 @@ function renderTrabalhos() {
   // Ensure every accepted quote has a trabalho entry (sync to Supabase in background)
   orcamentos.forEach(o => {
     if (!trabalhos.find(t => t.orcamentoId === o.id)) {
-      const entry = { orcamentoId: o.id, status: 'Para Imprimir', vendaId: null };
+      const entry = { orcamentoId: o.id, status: 'Para Imprimir', vendaId: null, filamentosUsados: o.filamentosUsados || [] };
       DB._cache['trabalhos'].push(entry);
       DB.upsert('trabalhos', entry);
     }
@@ -3635,12 +3687,72 @@ function renderCatalogoDef() {
     </tr>`).join('');
 }
 
+// ---- CATÁLOGO — helpers de filamentos e dropdowns ----
+let _prodFilamentos = [];
+
+function populateProdutoDropdowns() {
+  const cfg = getConfig();
+  const makeOpts = (items, noneLabel) =>
+    `<option value="">${noneLabel} (€0.00)</option>` +
+    (items || []).map(i => `<option value='${JSON.stringify({nome: i.nome, custo: i.custo})}'>${esc(i.nome)} — €${parseFloat(i.custo||0).toFixed(2)}</option>`).join('');
+  document.getElementById('prod-embalagem-sel').innerHTML = makeOpts(cfg.embalagens, 'Nenhuma');
+  document.getElementById('prod-transporte-sel').innerHTML = makeOpts(cfg.transportadoras, 'Nenhum');
+  document.getElementById('prod-outros-sel').innerHTML = makeOpts(cfg.outros, 'Nenhum');
+  // Populate filament select
+  const filSel = document.getElementById('prod-fil-select');
+  const filamentos = DB.get('filamentos');
+  filSel.innerHTML = '<option value="">— Selecionar filamento —</option>' +
+    filamentos.map(f => {
+      const label = `${f.marca} ${f.material}${f.corNome ? ' · ' + f.corNome : ''} (${f.pesoRestante}g)`;
+      return `<option value="${f.id}">${esc(label)}</option>`;
+    }).join('');
+}
+
+function renderProdFilList() {
+  const container = document.getElementById('prod-fil-list');
+  if (!container) return;
+  const filamentos = DB.get('filamentos');
+  if (!_prodFilamentos.length) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:12px;padding:4px 0;">Nenhum filamento associado.</p>`;
+    return;
+  }
+  container.innerHTML = _prodFilamentos.map((item, idx) => {
+    const fil = filamentos.find(f => f.id === item.filamentoId);
+    const label = fil ? `${fil.marca} ${fil.material}${fil.corNome ? ' · ' + fil.corNome : ''}` : `Filamento #${item.filamentoId}`;
+    const dot = fil ? `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${fil.corHex};border:1px solid rgba(255,255,255,0.2);margin-right:5px;flex-shrink:0;"></span>` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;background:var(--elevated);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+      <div style="display:flex;align-items:center;flex:1;min-width:0;">${dot}<span style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(label)}</span></div>
+      <span style="font-size:12px;font-weight:700;color:var(--brand);white-space:nowrap;">${item.peso}g</span>
+      <button class="btn btn-ghost btn-sm" onclick="_prodFilamentos.splice(${idx},1);renderProdFilList();" style="color:var(--danger);padding:3px 8px;">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addFilamentoAoProduto() {
+  const sel = document.getElementById('prod-fil-select');
+  const pesoInput = document.getElementById('prod-fil-peso');
+  const filamentoId = parseInt(sel.value);
+  const peso = parseFloat(pesoInput.value);
+  if (!filamentoId) { showToast('⚠️ Seleciona um filamento'); return; }
+  if (!peso || peso <= 0) { showToast('⚠️ Introduz um peso válido'); return; }
+  const existing = _prodFilamentos.find(f => f.filamentoId === filamentoId);
+  if (existing) { existing.peso = peso; } else { _prodFilamentos.push({ filamentoId, peso }); }
+  sel.value = '';
+  pesoInput.value = '';
+  renderProdFilList();
+}
+
 function calcProduto() {
   const mat = parseFloat(document.getElementById('prod-custo-material').value) || 0;
   const mao = parseFloat(document.getElementById('prod-custo-mao-obra').value) || 0;
-  const emb = parseFloat(document.getElementById('prod-embalagem').value) || 0;
+  const embVal = document.getElementById('prod-embalagem-sel').value;
+  const tranVal = document.getElementById('prod-transporte-sel').value;
+  const outVal = document.getElementById('prod-outros-sel').value;
+  const emb = embVal ? (JSON.parse(embVal).custo || 0) : 0;
+  const tra = tranVal ? (JSON.parse(tranVal).custo || 0) : 0;
+  const out = outVal ? (JSON.parse(outVal).custo || 0) : 0;
   const preco = parseFloat(document.getElementById('prod-preco-sugerido').value) || 0;
-  const custo = mat + mao + emb;
+  const custo = mat + mao + emb + tra + out;
   const margem = preco > 0 ? ((preco - custo) / preco) * 100 : 0;
   document.getElementById('prod-cr-custo').textContent = '€' + custo.toFixed(2);
   document.getElementById('prod-cr-margem').textContent = margem.toFixed(1) + '%';
@@ -3650,11 +3762,14 @@ function calcProduto() {
 function openNovoProduto() {
   editingId.produto = null;
   document.getElementById('modal-produto-title').textContent = 'Novo Produto';
-  ['sku','nome','custo-material','custo-mao-obra','embalagem','preco-sugerido'].forEach(f => document.getElementById('prod-' + f).value = '');
+  ['sku','nome','custo-material','custo-mao-obra','preco-sugerido','fil-peso'].forEach(f => document.getElementById('prod-' + f).value = '');
   populateCategoriaSelect('prod-categoria');
   document.getElementById('prod-categoria').insertAdjacentHTML('afterbegin', '<option value="">Selecionar…</option>');
   document.getElementById('prod-categoria').value = '';
   document.getElementById('prod-material').value = '';
+  _prodFilamentos = [];
+  populateProdutoDropdowns();
+  renderProdFilList();
   calcProduto();
   openModal('modal-produto');
 }
@@ -3671,8 +3786,21 @@ function editProduto(id) {
   document.getElementById('prod-material').value = c.material;
   document.getElementById('prod-custo-material').value = c.custoMaterial;
   document.getElementById('prod-custo-mao-obra').value = c.custoMaoObra;
-  document.getElementById('prod-embalagem').value = c.embalagem;
   document.getElementById('prod-preco-sugerido').value = c.precoSugerido;
+  _prodFilamentos = JSON.parse(JSON.stringify(c.filamentosUsados || []));
+  populateProdutoDropdowns();
+  // Restore dropdown selections by nome
+  const restoreProdSel = (selId, nome) => {
+    if (!nome) return;
+    const sel = document.getElementById(selId);
+    for (const opt of sel.options) {
+      if (opt.value) { try { if (JSON.parse(opt.value).nome === nome) { sel.value = opt.value; return; } } catch(e){} }
+    }
+  };
+  restoreProdSel('prod-embalagem-sel', c.embalagemNome);
+  restoreProdSel('prod-transporte-sel', c.transporteNome);
+  restoreProdSel('prod-outros-sel', c.outrosNome);
+  renderProdFilList();
   calcProduto();
   openModal('modal-produto');
 }
@@ -3682,9 +3810,14 @@ async function saveProduto() {
   if (!nome) { showToast('⚠️ Nome do produto é obrigatório'); return; }
   const mat = parseFloat(document.getElementById('prod-custo-material').value) || 0;
   const mao = parseFloat(document.getElementById('prod-custo-mao-obra').value) || 0;
-  const emb = parseFloat(document.getElementById('prod-embalagem').value) || 0;
+  const embVal = document.getElementById('prod-embalagem-sel').value;
+  const tranVal = document.getElementById('prod-transporte-sel').value;
+  const outVal = document.getElementById('prod-outros-sel').value;
+  const embData = embVal ? JSON.parse(embVal) : { nome: '', custo: 0 };
+  const tranData = tranVal ? JSON.parse(tranVal) : { nome: '', custo: 0 };
+  const outData = outVal ? JSON.parse(outVal) : { nome: '', custo: 0 };
   const preco = parseFloat(document.getElementById('prod-preco-sugerido').value) || 0;
-  const custo = mat + mao + emb;
+  const custo = mat + mao + (embData.custo || 0) + (tranData.custo || 0) + (outData.custo || 0);
   const margem = preco > 0 ? parseFloat(((preco - custo) / preco * 100).toFixed(2)) : 0;
   const item = {
     id: editingId.produto ?? Date.now(),
@@ -3692,10 +3825,14 @@ async function saveProduto() {
     nome,
     categoria: document.getElementById('prod-categoria').value,
     material: document.getElementById('prod-material').value,
-    custoMaterial: mat, custoMaoObra: mao, embalagem: emb,
+    custoMaterial: mat, custoMaoObra: mao,
+    embalagemNome: embData.nome || '', embalagemCusto: embData.custo || 0,
+    transporteNome: tranData.nome || '', transporteCusto: tranData.custo || 0,
+    outrosNome: outData.nome || '', outrosCusto: outData.custo || 0,
     custoTotal: +custo.toFixed(2),
     precoSugerido: preco,
     margemSugerida: margem,
+    filamentosUsados: _prodFilamentos,
   };
   await DB.upsert('catalogo', item);
   showToast(editingId.produto ? '✅ Produto atualizado' : '✅ Produto adicionado');
