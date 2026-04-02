@@ -2651,6 +2651,24 @@ function addFromCatalog(catalogId) {
 function confirmDelete(collection, id) {
   openModal('modal-delete');
   document.getElementById('confirm-delete-btn').onclick = async () => {
+    // If deleting an orcamento, restore filament weights if the trabalho was Concluído
+    if (collection === 'orcamentos') {
+      const trabalho = DB.get('trabalhos').find(t => t.orcamentoId === id);
+      if (trabalho && trabalho.status === 'Concluído') {
+        const filamentosUsados = trabalho.filamentosUsados || [];
+        for (const item of filamentosUsados) {
+          const fil = DB.get('filamentos').find(f => f.id === item.filamentoId);
+          if (!fil) continue;
+          const pesoTotal = parseFloat(fil.pesoTotal) || 1000;
+          const novoRestante = Math.min(pesoTotal, (parseFloat(fil.pesoRestante) || 0) + (parseFloat(item.peso) || 0));
+          let novoEstado;
+          if (novoRestante <= 0) novoEstado = 'Esgotado';
+          else if (novoRestante / pesoTotal < 0.25) novoEstado = 'Baixo Stock';
+          else novoEstado = 'Disponível';
+          await DB.upsert('filamentos', { ...fil, pesoRestante: novoRestante, estado: novoEstado });
+        }
+      }
+    }
     await DB.delete(collection, id);
     // If deleting an orcamento, also clean up the trabalho from cache
     if (collection === 'orcamentos') {
