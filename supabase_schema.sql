@@ -87,6 +87,9 @@ create table if not exists public.filamentos (
   created_at    timestamptz default now()
 );
 
+-- Migração: coluna bobines (gestão de bobines individuais por filamento)
+alter table public.filamentos add column if not exists bobines jsonb default '[]';
+
 -- IMPRESSORAS (Impressoras 3D)
 create table if not exists public.impressoras (
   id            bigint primary key,
