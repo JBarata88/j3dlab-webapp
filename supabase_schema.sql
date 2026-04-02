@@ -28,7 +28,8 @@ create table if not exists public.orcamentos (
   transporte_nome text,
   transporte_custo numeric,
   outros_nome   text,
-  outros_custo  numeric
+  outros_custo  numeric,
+  categoria     text
 );
 
 -- TRABALHOS (Trabalhos de impressão — ligados a orçamentos aceites)
