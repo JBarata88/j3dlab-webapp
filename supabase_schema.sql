@@ -29,8 +29,12 @@ create table if not exists public.orcamentos (
   transporte_custo numeric,
   outros_nome   text,
   outros_custo  numeric,
-  categoria     text
+  categoria     text,
+  preco_final   numeric
 );
+
+-- Migração: adicionar coluna preco_final se a tabela já existir
+alter table public.orcamentos add column if not exists preco_final numeric;
 
 -- TRABALHOS (Trabalhos de impressão — ligados a orçamentos aceites)
 create table if not exists public.trabalhos (

@@ -1024,6 +1024,10 @@
           <label>Notas</label>
           <input type="text" id="orc-notas" placeholder="Observações opcionais">
         </div>
+        <div class="form-group">
+          <label>Preço Final (€) <span style="font-size:11px;color:var(--muted);font-weight:400;">— sobrepõe o calculado na venda</span></label>
+          <input type="number" id="orc-preco-venda" placeholder="Deixar vazio para usar o calculado" min="0" step="0.01">
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1594,6 +1598,7 @@ const _maps = {
       embalagem_nome: o.embalagemNome || null, embalagem_custo: parseFloat(o.embalagemCusto) || null,
       transporte_nome: o.transporteNome || null, transporte_custo: parseFloat(o.transporteCusto) || null,
       outros_nome: o.outrosNome || null, outros_custo: parseFloat(o.outrosCusto) || null,
+      preco_final: parseFloat(o.precoFinal) || null,
     }),
     fromDb: r => ({
       id: r.id, nome: r.nome, cliente: r.cliente || '', material: r.material || 'PLA',
@@ -1607,6 +1612,7 @@ const _maps = {
       embalagemNome: r.embalagem_nome || '', embalagemCusto: r.embalagem_custo || 0,
       transporteNome: r.transporte_nome || '', transporteCusto: r.transporte_custo || 0,
       outrosNome: r.outros_nome || '', outrosCusto: r.outros_custo || 0,
+      precoFinal: r.preco_final?.toString() || '',
     }),
   },
   trabalhos: {
@@ -1999,6 +2005,7 @@ async function saveOrcamento() {
     categoria: document.getElementById('orc-categoria').value,
     notas: document.getElementById('orc-notas').value,
     preco: preco.toFixed(2),
+    precoFinal: document.getElementById('orc-preco-venda').value,
     data: existingData?.data || new Date().toISOString(),
   };
 
@@ -2011,7 +2018,7 @@ async function saveOrcamento() {
 }
 
 function resetOrcamentoForm() {
-  ['orc-nome','orc-cliente','orc-notas'].forEach(id => document.getElementById(id).value = '');
+  ['orc-nome','orc-cliente','orc-notas','orc-preco-venda'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('orc-material').value = 'PLA';
   document.getElementById('orc-peso').value = '';
   document.getElementById('orc-tempo').value = '';
@@ -2057,6 +2064,7 @@ function editOrcamento(id) {
   populateCategoriaSelect('orc-categoria', o.categoria);
   document.getElementById('orc-categoria').insertAdjacentHTML('afterbegin', '<option value="">Sem categoria</option>');
   document.getElementById('orc-notas').value = o.notas;
+  document.getElementById('orc-preco-venda').value = o.precoFinal || '';
   populateImpressorasSelect();
   document.getElementById('orc-impressora').value = o.impressoraId || '';
   populateOrcamentoCatalogo();
@@ -2784,9 +2792,9 @@ async function updateTrabalhoStatus(orcamentoId, newStatus) {
   if (newStatus === 'Concluído' && !old.vendaId) {
     const orc = DB.get('orcamentos').find(o => o.id === orcamentoId);
     if (orc) {
-      const preco = parseFloat(orc.preco) || 0;
+      const preco = parseFloat(orc.precoFinal) > 0 ? parseFloat(orc.precoFinal) : parseFloat(orc.preco) || 0;
       const margem = parseFloat(orc.margem) || 0;
-      const custoUnit = margem < 100 ? preco / (1 + margem / 100) : 0;
+      const custoUnit = margem < 100 ? parseFloat(orc.preco) / (1 + margem / 100) : 0;
       const qtd = 1;
       const custoTotal = custoUnit * qtd;
       const receita = preco * qtd;
