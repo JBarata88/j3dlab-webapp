@@ -1386,12 +1386,33 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Custo Material (€)</label>
-          <input id="prod-custo-material" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
+          <label>Qualidade</label>
+          <select id="prod-qualidade" onchange="calcProduto()">
+            <option value="1">Draft (0.3mm)</option>
+            <option value="1.1" selected>Standard (0.2mm)</option>
+            <option value="1.25">Fine (0.15mm)</option>
+            <option value="1.5">Ultra (0.1mm)</option>
+          </select>
         </div>
         <div class="form-group">
-          <label>Custo Mão de Obra (€)</label>
-          <input id="prod-custo-mao-obra" type="number" step="0.01" min="0" placeholder="0.00" oninput="calcProduto()">
+          <label>Peso do Material (g)</label>
+          <input id="prod-peso" type="number" min="0" step="0.1" placeholder="0" oninput="calcProduto()">
+        </div>
+        <div class="form-group">
+          <label>Preço/kg Filamento (€)</label>
+          <input id="prod-filamento-preco" type="number" value="20" step="0.5" min="0" oninput="calcProduto()">
+        </div>
+        <div class="form-group">
+          <label>Tempo de Impressão (h)</label>
+          <input id="prod-tempo" type="number" min="0" step="0.1" placeholder="0.0" oninput="calcProduto()">
+        </div>
+        <div class="form-group">
+          <label>Custo Elétrico (€/h)</label>
+          <input id="prod-eletrico" type="number" step="0.0001" min="0" placeholder="0.0000" oninput="calcProduto()">
+        </div>
+        <div class="form-group">
+          <label>Mão de Obra (min)</label>
+          <input id="prod-mao-obra-min" type="number" value="0" min="0" step="1" oninput="calcProduto()">
         </div>
         <div class="form-group">
           <label>Preço Sugerido (€)</label>
@@ -1405,7 +1426,7 @@
           <label>Transporte</label>
           <select id="prod-transporte-sel" onchange="calcProduto()"><option value="">Nenhum (€0.00)</option></select>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="grid-column:1/-1;">
           <label>Outros</label>
           <select id="prod-outros-sel" onchange="calcProduto()"><option value="">Nenhum (€0.00)</option></select>
         </div>
@@ -1430,15 +1451,18 @@
         </div>
       </div>
 
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;gap:32px;margin-top:16px;">
-        <div>
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;">Custo Total</div>
-          <div id="prod-cr-custo" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--danger);">€0.00</div>
+      <div class="quote-result" style="margin-top:16px;">
+        <div style="display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:8px;">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;">Custo Total</div>
+            <div id="prod-cr-custo" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--danger);">€0.00</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;">Margem Sugerida</div>
+            <div id="prod-cr-margem" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--brand);">0.0%</div>
+          </div>
         </div>
-        <div>
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;font-weight:600;margin-bottom:4px;">Margem Sugerida</div>
-          <div id="prod-cr-margem" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--brand);">0.0%</div>
-        </div>
+        <div id="prod-cr-breakdown" style="font-size:12px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr;gap:4px;"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1703,7 +1727,11 @@ const _maps = {
   catalogo: {
     toDb: c => ({
       id: c.id, sku: c.sku || null, nome: c.nome, categoria: c.categoria || null,
-      material: c.material || null, custo_material: parseFloat(c.custoMaterial) || null,
+      material: c.material || null,
+      peso: parseFloat(c.peso) || null, tempo: parseFloat(c.tempo) || null,
+      eletrico: parseFloat(c.eletrico) || null, mao_obra_min: parseFloat(c.maoObraMin) || null,
+      qualidade: parseFloat(c.qualidade) || 1.1, filamento_preco: parseFloat(c.filamentoPreco) || 20,
+      custo_material: parseFloat(c.custoMaterial) || null,
       custo_mao_obra: parseFloat(c.custoMaoObra) || null,
       embalagem: parseFloat(c.embalagemCusto) || null, embalagem_nome: c.embalagemNome || null,
       transporte_nome: c.transporteNome || null, transporte_custo: parseFloat(c.transporteCusto) || null,
@@ -1713,8 +1741,11 @@ const _maps = {
     }),
     fromDb: r => ({
       id: r.id, sku: r.sku || '', nome: r.nome, categoria: r.categoria || '',
-      material: r.material || '', custoMaterial: r.custo_material || 0,
-      custoMaoObra: r.custo_mao_obra || 0,
+      material: r.material || '',
+      peso: r.peso?.toString() || '', tempo: r.tempo?.toString() || '',
+      eletrico: r.eletrico?.toString() || '', maoObraMin: r.mao_obra_min?.toString() || '0',
+      qualidade: r.qualidade?.toString() || '1.1', filamentoPreco: r.filamento_preco?.toString() || '20',
+      custoMaterial: r.custo_material || 0, custoMaoObra: r.custo_mao_obra || 0,
       embalagemNome: r.embalagem_nome || '', embalagemCusto: r.embalagem || 0,
       transporteNome: r.transporte_nome || '', transporteCusto: r.transporte_custo || 0,
       outrosNome: r.outros_nome || '', outrosCusto: r.outros_custo || 0,
@@ -1970,6 +2001,12 @@ function onOrcCatalogoSel() {
   document.getElementById('orc-nome').value = produto.nome;
   if (produto.material) document.getElementById('orc-material').value = produto.material;
   if (produto.margemSugerida) document.getElementById('orc-margem').value = produto.margemSugerida;
+  if (produto.peso) document.getElementById('orc-peso').value = produto.peso;
+  if (produto.filamentoPreco) document.getElementById('orc-filamento-preco').value = produto.filamentoPreco;
+  if (produto.tempo) document.getElementById('orc-tempo').value = produto.tempo;
+  if (produto.eletrico) document.getElementById('orc-eletrico').value = produto.eletrico;
+  if (produto.maoObraMin) document.getElementById('orc-mao-obra-min').value = produto.maoObraMin;
+  if (produto.qualidade) document.getElementById('orc-qualidade').value = produto.qualidade;
   // Auto-populate embalagem/transporte/outros from catalog product
   const restoreOrcSel = (selId, nome) => {
     if (!nome) return;
@@ -3743,26 +3780,53 @@ function addFilamentoAoProduto() {
 }
 
 function calcProduto() {
-  const mat = parseFloat(document.getElementById('prod-custo-material').value) || 0;
-  const mao = parseFloat(document.getElementById('prod-custo-mao-obra').value) || 0;
+  const peso = parseFloat(document.getElementById('prod-peso').value) || 0;
+  const filPreco = parseFloat(document.getElementById('prod-filamento-preco').value) || 20;
+  const tempo = parseFloat(document.getElementById('prod-tempo').value) || 0;
+  const eletrico = parseFloat(document.getElementById('prod-eletrico').value) || 0;
+  const maoObraMin = parseFloat(document.getElementById('prod-mao-obra-min').value) || 0;
+  const qualidade = parseFloat(document.getElementById('prod-qualidade').value) || 1.1;
+  const preco = parseFloat(document.getElementById('prod-preco-sugerido').value) || 0;
+  const cfg = getConfig();
+  const maoObraHora = cfg.maoObra || 0;
+
+  const custoMaterial = (peso / 1000) * filPreco;
+  const custoEletrico = tempo * eletrico;
+  const custoMaoObra = (maoObraMin / 60) * maoObraHora;
+
   const embVal = document.getElementById('prod-embalagem-sel').value;
   const tranVal = document.getElementById('prod-transporte-sel').value;
   const outVal = document.getElementById('prod-outros-sel').value;
-  const emb = embVal ? (JSON.parse(embVal).custo || 0) : 0;
-  const tra = tranVal ? (JSON.parse(tranVal).custo || 0) : 0;
-  const out = outVal ? (JSON.parse(outVal).custo || 0) : 0;
-  const preco = parseFloat(document.getElementById('prod-preco-sugerido').value) || 0;
-  const custo = mat + mao + emb + tra + out;
-  const margem = preco > 0 ? ((preco - custo) / preco) * 100 : 0;
-  document.getElementById('prod-cr-custo').textContent = '€' + custo.toFixed(2);
+  const custoEmb = embVal ? (JSON.parse(embVal).custo || 0) : 0;
+  const custoTran = tranVal ? (JSON.parse(tranVal).custo || 0) : 0;
+  const custoOut = outVal ? (JSON.parse(outVal).custo || 0) : 0;
+
+  const custoBase = (custoMaterial + custoEletrico + custoMaoObra) * qualidade;
+  const custoTotal = custoBase + custoEmb + custoTran + custoOut;
+  const margem = preco > 0 ? ((preco - custoTotal) / preco) * 100 : 0;
+
+  document.getElementById('prod-cr-custo').textContent = '€' + custoTotal.toFixed(2);
   document.getElementById('prod-cr-margem').textContent = margem.toFixed(1) + '%';
   document.getElementById('prod-cr-margem').style.color = margem >= 0 ? 'var(--brand)' : 'var(--danger)';
+  document.getElementById('prod-cr-breakdown').innerHTML = `
+    <span style="color:var(--muted)">Material:</span><span>€${custoMaterial.toFixed(2)}</span>
+    <span style="color:var(--muted)">Energia:</span><span>€${custoEletrico.toFixed(2)}</span>
+    <span style="color:var(--muted)">Mão de Obra:</span><span>€${custoMaoObra.toFixed(2)}</span>
+    <span style="color:var(--muted)">Qualidade:</span><span>×${qualidade}</span>
+    <span style="color:var(--muted)">Embalagem:</span><span>€${custoEmb.toFixed(2)}</span>
+    <span style="color:var(--muted)">Transporte:</span><span>€${custoTran.toFixed(2)}</span>
+    <span style="color:var(--muted)">Outros:</span><span>€${custoOut.toFixed(2)}</span>
+  `;
+  return { custoTotal, custoMaterial, custoMaoObra };
 }
 
 function openNovoProduto() {
   editingId.produto = null;
   document.getElementById('modal-produto-title').textContent = 'Novo Produto';
-  ['sku','nome','custo-material','custo-mao-obra','preco-sugerido','fil-peso'].forEach(f => document.getElementById('prod-' + f).value = '');
+  ['sku','nome','peso','tempo','mao-obra-min','preco-sugerido','fil-peso'].forEach(f => document.getElementById('prod-' + f).value = '');
+  document.getElementById('prod-filamento-preco').value = '20';
+  document.getElementById('prod-eletrico').value = (getConfig().eletricidade || 0).toFixed(4);
+  document.getElementById('prod-qualidade').value = '1.1';
   populateCategoriaSelect('prod-categoria');
   document.getElementById('prod-categoria').insertAdjacentHTML('afterbegin', '<option value="">Selecionar…</option>');
   document.getElementById('prod-categoria').value = '';
@@ -3784,8 +3848,12 @@ function editProduto(id) {
   populateCategoriaSelect('prod-categoria', c.categoria);
   document.getElementById('prod-categoria').insertAdjacentHTML('afterbegin', '<option value="">Selecionar…</option>');
   document.getElementById('prod-material').value = c.material;
-  document.getElementById('prod-custo-material').value = c.custoMaterial;
-  document.getElementById('prod-custo-mao-obra').value = c.custoMaoObra;
+  document.getElementById('prod-peso').value = c.peso || '';
+  document.getElementById('prod-filamento-preco').value = c.filamentoPreco || '20';
+  document.getElementById('prod-tempo').value = c.tempo || '';
+  document.getElementById('prod-eletrico').value = c.eletrico || (getConfig().eletricidade || 0).toFixed(4);
+  document.getElementById('prod-mao-obra-min').value = c.maoObraMin || '0';
+  document.getElementById('prod-qualidade').value = c.qualidade || '1.1';
   document.getElementById('prod-preco-sugerido').value = c.precoSugerido;
   _prodFilamentos = JSON.parse(JSON.stringify(c.filamentosUsados || []));
   populateProdutoDropdowns();
@@ -3808,16 +3876,25 @@ function editProduto(id) {
 async function saveProduto() {
   const nome = document.getElementById('prod-nome').value.trim();
   if (!nome) { showToast('⚠️ Nome do produto é obrigatório'); return; }
-  const mat = parseFloat(document.getElementById('prod-custo-material').value) || 0;
-  const mao = parseFloat(document.getElementById('prod-custo-mao-obra').value) || 0;
+  const peso = parseFloat(document.getElementById('prod-peso').value) || 0;
+  const filPreco = parseFloat(document.getElementById('prod-filamento-preco').value) || 20;
+  const tempo = parseFloat(document.getElementById('prod-tempo').value) || 0;
+  const eletrico = parseFloat(document.getElementById('prod-eletrico').value) || 0;
+  const maoObraMin = parseFloat(document.getElementById('prod-mao-obra-min').value) || 0;
+  const qualidade = parseFloat(document.getElementById('prod-qualidade').value) || 1.1;
+  const preco = parseFloat(document.getElementById('prod-preco-sugerido').value) || 0;
+  const cfg = getConfig();
+  const custoMaterial = (peso / 1000) * filPreco;
+  const custoEletrico = tempo * eletrico;
+  const custoMaoObra = (maoObraMin / 60) * (cfg.maoObra || 0);
   const embVal = document.getElementById('prod-embalagem-sel').value;
   const tranVal = document.getElementById('prod-transporte-sel').value;
   const outVal = document.getElementById('prod-outros-sel').value;
   const embData = embVal ? JSON.parse(embVal) : { nome: '', custo: 0 };
   const tranData = tranVal ? JSON.parse(tranVal) : { nome: '', custo: 0 };
   const outData = outVal ? JSON.parse(outVal) : { nome: '', custo: 0 };
-  const preco = parseFloat(document.getElementById('prod-preco-sugerido').value) || 0;
-  const custo = mat + mao + (embData.custo || 0) + (tranData.custo || 0) + (outData.custo || 0);
+  const custoBase = (custoMaterial + custoEletrico + custoMaoObra) * qualidade;
+  const custo = custoBase + (embData.custo || 0) + (tranData.custo || 0) + (outData.custo || 0);
   const margem = preco > 0 ? parseFloat(((preco - custo) / preco * 100).toFixed(2)) : 0;
   const item = {
     id: editingId.produto ?? Date.now(),
@@ -3825,7 +3902,8 @@ async function saveProduto() {
     nome,
     categoria: document.getElementById('prod-categoria').value,
     material: document.getElementById('prod-material').value,
-    custoMaterial: mat, custoMaoObra: mao,
+    peso, tempo, eletrico, maoObraMin, qualidade, filamentoPreco: filPreco,
+    custoMaterial: +custoMaterial.toFixed(4), custoMaoObra: +custoMaoObra.toFixed(4),
     embalagemNome: embData.nome || '', embalagemCusto: embData.custo || 0,
     transporteNome: tranData.nome || '', transporteCusto: tranData.custo || 0,
     outrosNome: outData.nome || '', outrosCusto: outData.custo || 0,

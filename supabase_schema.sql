@@ -141,6 +141,13 @@ alter table public.catalogo add column if not exists transporte_nome text;
 alter table public.catalogo add column if not exists transporte_custo numeric;
 alter table public.catalogo add column if not exists outros_nome text;
 alter table public.catalogo add column if not exists outros_custo numeric;
+-- Campos de custo detalhados (espelham o orçamento)
+alter table public.catalogo add column if not exists peso numeric;
+alter table public.catalogo add column if not exists tempo numeric;
+alter table public.catalogo add column if not exists eletrico numeric;
+alter table public.catalogo add column if not exists mao_obra_min numeric;
+alter table public.catalogo add column if not exists qualidade numeric default 1.1;
+alter table public.catalogo add column if not exists filamento_preco numeric default 20;
 
 -- CONFIGURACOES (Configurações gerais da app — linha única id=1)
 create table if not exists public.configuracoes (
