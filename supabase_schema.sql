@@ -50,6 +50,19 @@ create table if not exists public.trabalhos (
 -- Migração: adicionar coluna filamentos_usados se a tabela já existir
 alter table public.trabalhos add column if not exists filamentos_usados jsonb default '[]';
 
+-- Migração: colunas para trabalhos sem orçamento (criados diretamente)
+alter table public.trabalhos add column if not exists nome text;
+alter table public.trabalhos add column if not exists cliente text;
+alter table public.trabalhos add column if not exists material text;
+alter table public.trabalhos add column if not exists preco numeric;
+alter table public.trabalhos add column if not exists peso numeric;
+alter table public.trabalhos add column if not exists tempo numeric;
+alter table public.trabalhos add column if not exists qualidade numeric;
+alter table public.trabalhos add column if not exists margem numeric;
+alter table public.trabalhos add column if not exists notas text;
+alter table public.trabalhos add column if not exists sem_orcamento boolean default false;
+alter table public.trabalhos add column if not exists data date;
+
 -- VENDAS (Registo de vendas)
 create table if not exists public.vendas (
   id            bigint primary key,

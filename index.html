@@ -493,7 +493,7 @@
               <ol style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
                 <li style="display:flex;gap:10px;align-items:flex-start;">
                   <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</span>
-                  <span style="font-size:13px;color:var(--muted);line-height:1.5;">Os trabalhos são criados automaticamente ao <strong style="color:var(--text);">aceitar um orçamento</strong>.</span>
+                  <span style="font-size:13px;color:var(--muted);line-height:1.5;">Os trabalhos são criados automaticamente ao <strong style="color:var(--text);">aceitar um orçamento</strong> — ou diretamente em <strong style="color:var(--text);">Trabalhos → Novo Trabalho</strong>, sem precisar de orçamento.</span>
                 </li>
                 <li style="display:flex;gap:10px;align-items:flex-start;">
                   <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</span>
@@ -502,13 +502,13 @@
                     <ul style="list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:4px;">
                       <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Estado</strong> — Para Imprimir / Pendente / Concluído</span></li>
                       <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Materiais e pesos</strong> usados na impressão</span></li>
-                      <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Tempo e margem</strong> calculados do orçamento</span></li>
+                      <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Preço acordado</strong> — opcional em trabalhos livres (badge <strong style="color:var(--brand);">Livre</strong>)</span></li>
                     </ul>
                   </div>
                 </li>
                 <li style="display:flex;gap:10px;align-items:flex-start;">
                   <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</span>
-                  <span style="font-size:13px;color:var(--muted);line-height:1.5;">Atualiza o estado conforme avança. Ao marcar como <strong style="color:var(--success);">Concluído</strong>, o peso do filamento é descontado do stock automaticamente.</span>
+                  <span style="font-size:13px;color:var(--muted);line-height:1.5;">Atualiza o estado conforme avança. Ao marcar como <strong style="color:var(--success);">Concluído</strong>, o filamento é descontado do stock e, se houver preço, a venda é criada automaticamente.</span>
                 </li>
               </ol>
             </div>
@@ -686,6 +686,10 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
             <div id="trabalhos-summary" style="display:flex;gap:12px;font-size:12px;color:var(--muted);"></div>
+            <button class="btn btn-primary" onclick="openNovoTrabalho()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo Trabalho
+            </button>
           </div>
         </div>
 
@@ -725,7 +729,7 @@
           </div>
           <div id="trabalhos-empty" class="empty-state" style="display:none;">
             <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            <p>Sem orçamentos aceites. Aceita um orçamento para iniciar um trabalho!</p>
+            <p>Sem trabalhos. Aceita um orçamento ou cria um trabalho diretamente!</p>
           </div>
         </div>
       </div>
@@ -1979,6 +1983,58 @@
   </div>
 </div>
 
+<!-- MODAL: NOVO TRABALHO (sem orçamento) -->
+<div class="modal-overlay" id="modal-novo-trabalho">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <h3 id="novo-trabalho-modal-title">Novo Trabalho</h3>
+      <button class="modal-close" onclick="closeModal('modal-novo-trabalho')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--muted);font-size:12px;margin-bottom:16px;">Cria um trabalho diretamente, sem precisar de um orçamento.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="grid-column:1/-1;">
+          <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Peça / Descrição <span style="color:var(--danger);">*</span></label>
+          <input id="nt-nome" type="text" placeholder="ex: Suporte de parede, Tampa do motor…">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Cliente</label>
+          <input id="nt-cliente" type="text" placeholder="Nome do cliente (opcional)">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Material</label>
+          <select id="nt-material">
+            <option>PLA</option><option>PETG</option><option>ABS</option><option>PLA+</option>
+            <option>ASA</option><option>TPU</option><option>Nylon</option><option>Resina</option><option>Outro</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Peso (g)</label>
+          <input id="nt-peso" type="number" min="0" step="1" placeholder="ex: 120">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Tempo de impressão (h)</label>
+          <input id="nt-tempo" type="number" min="0" step="0.1" placeholder="ex: 3.5">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Preço acordado (€) <span style="color:var(--muted);font-weight:400;font-size:10px;">— deixa em branco se não houver</span></label>
+          <input id="nt-preco" type="number" min="0" step="0.01" placeholder="ex: 15.00">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;">Notas</label>
+          <input id="nt-notas" type="text" placeholder="Notas internas (opcional)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-novo-trabalho')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNovoTrabalho()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: FILAMENTOS DO TRABALHO -->
 <div class="modal-overlay" id="modal-trabalho-filamentos">
   <div class="modal" style="width:520px;">
@@ -2104,8 +2160,8 @@ const _maps = {
     }),
   },
   trabalhos: {
-    toDb: t => ({ orcamento_id: t.orcamentoId, status: t.status, venda_id: t.vendaId || null, filamentos_usados: t.filamentosUsados || [] }),
-    fromDb: r => ({ orcamentoId: r.orcamento_id, status: r.status || 'Para Imprimir', vendaId: r.venda_id || null, filamentosUsados: r.filamentos_usados || [] }),
+    toDb: t => ({ orcamento_id: t.orcamentoId, status: t.status, venda_id: t.vendaId || null, filamentos_usados: t.filamentosUsados || [], nome: t.nome || null, cliente: t.cliente || null, material: t.material || null, preco: t.preco != null ? parseFloat(t.preco) : null, peso: t.peso != null ? parseFloat(t.peso) : null, tempo: t.tempo != null ? parseFloat(t.tempo) : null, qualidade: t.qualidade != null ? parseFloat(t.qualidade) : null, margem: t.margem != null ? parseFloat(t.margem) : null, notas: t.notas || null, sem_orcamento: t.semOrcamento || false, data: t.data || null }),
+    fromDb: r => ({ orcamentoId: r.orcamento_id, status: r.status || 'Para Imprimir', vendaId: r.venda_id || null, filamentosUsados: r.filamentos_usados || [], nome: r.nome || null, cliente: r.cliente || null, material: r.material || null, preco: r.preco != null ? r.preco.toString() : null, peso: r.peso != null ? r.peso.toString() : null, tempo: r.tempo != null ? r.tempo.toString() : null, qualidade: r.qualidade != null ? r.qualidade.toString() : null, margem: r.margem != null ? r.margem.toString() : null, notas: r.notas || null, semOrcamento: r.sem_orcamento || false, data: r.data || null }),
   },
   vendas: {
     toDb: v => ({
@@ -3427,24 +3483,47 @@ function renderTrabalhos() {
   const orcamentos = DB.get('orcamentos').filter(o => o.estado === 'Aceite');
   const trabalhos = DB.get('trabalhos');
 
-  // Ensure every accepted quote has a trabalho entry (sync to Supabase in background)
+  // Separate standalone jobs (sem orçamento) from linked jobs
+  const standaloneJobs = trabalhos.filter(t => t.semOrcamento);
+  const linkedJobs = trabalhos.filter(t => !t.semOrcamento);
+
+  // Ensure every accepted quote has a linked trabalho entry (sync to Supabase in background)
   orcamentos.forEach(o => {
-    if (!trabalhos.find(t => t.orcamentoId === o.id)) {
+    if (!linkedJobs.find(t => t.orcamentoId === o.id)) {
       const entry = { orcamentoId: o.id, status: 'Para Imprimir', vendaId: null, filamentosUsados: o.filamentosUsados || [] };
       DB._cache['trabalhos'].push(entry);
       DB.upsert('trabalhos', entry);
     }
   });
 
-  // Remove orphaned trabalho entries (quote no longer Aceite) — cache only, Supabase cleans on reload
+  // Remove orphaned linked trabalho entries (quote no longer Aceite) — cache only, Supabase cleans on reload
   const aceiteIds = new Set(orcamentos.map(o => o.id));
-  const cleanTrabalhos = trabalhos.filter(t => aceiteIds.has(t.orcamentoId));
+  const cleanLinkedJobs = linkedJobs.filter(t => aceiteIds.has(t.orcamentoId));
+  const cleanTrabalhos = [...cleanLinkedJobs, ...standaloneJobs];
 
-  // Build joined list
-  let data = orcamentos.map(o => ({
-    ...o,
-    trabalho: cleanTrabalhos.find(t => t.orcamentoId === o.id) || { status: 'Para Imprimir', vendaId: null }
-  }));
+  // Build joined list: linked jobs (from orcamentos) + standalone jobs
+  let data = [
+    ...orcamentos.map(o => ({
+      ...o,
+      trabalho: cleanLinkedJobs.find(t => t.orcamentoId === o.id) || { status: 'Para Imprimir', vendaId: null },
+      isStandalone: false
+    })),
+    ...standaloneJobs.map(t => ({
+      id: t.orcamentoId,
+      nome: t.nome || '—',
+      cliente: t.cliente || '',
+      material: t.material || 'PLA',
+      peso: t.peso,
+      tempo: t.tempo,
+      qualidade: null,
+      margem: null,
+      preco: t.preco,
+      data: t.data,
+      notas: t.notas,
+      trabalho: t,
+      isStandalone: true
+    }))
+  ];
 
   const filterStatus = document.getElementById('trabalho-filter-status')?.value;
   const filterSearch = document.getElementById('trabalho-filter-search')?.value?.toLowerCase();
@@ -3483,6 +3562,15 @@ function renderTrabalhos() {
     const filBtn = fils.length > 0
       ? `<button class="btn btn-ghost btn-sm" onclick="openFilamentosModal(${d.id})" style="color:var(--brand);font-weight:600;">${fils.length} fil.</button>`
       : `<button class="btn btn-ghost btn-sm" onclick="openFilamentosModal(${d.id})" style="color:var(--muted);">+ Associar</button>`;
+
+    const precoCell = d.isStandalone
+      ? (d.preco != null ? `<strong style="color:var(--brand)">€${parseFloat(d.preco).toFixed(2)}</strong>` : `<span style="color:var(--muted);font-size:11px;">Sem preço</span>`)
+      : `<strong style="color:var(--brand)">€${d.preco}</strong>`;
+
+    const nomeBadge = d.isStandalone
+      ? `${esc(d.nome)} <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:rgba(255,107,43,0.12);color:var(--brand);font-weight:700;vertical-align:middle;">Livre</span>`
+      : esc(d.nome);
+
     return `<tr style="${rowOpacity}">
       <td>
         <select
@@ -3495,20 +3583,22 @@ function renderTrabalhos() {
         </select>
       </td>
       <td><strong>${esc(d.cliente) || '<span style="color:var(--muted)">—</span>'}</strong></td>
-      <td>${esc(d.nome)}</td>
+      <td>${nomeBadge}</td>
       <td><span class="badge badge-neutral">${esc(d.material)}</span></td>
       <td style="color:var(--muted);font-size:12px;">${d.peso ? d.peso + 'g' : '—'}</td>
       <td style="color:var(--muted);font-size:12px;">${d.tempo ? d.tempo + 'h' : '—'}</td>
-      <td style="color:var(--muted);font-size:12px;">${qualLabels[String(d.qualidade)] || d.qualidade || '—'}</td>
-      <td style="color:var(--muted);font-size:12px;">${d.margem ? d.margem + '%' : '—'}</td>
-      <td><strong style="color:var(--brand)">€${d.preco}</strong></td>
+      <td style="color:var(--muted);font-size:12px;">${d.isStandalone ? '—' : (qualLabels[String(d.qualidade)] || d.qualidade || '—')}</td>
+      <td style="color:var(--muted);font-size:12px;">${d.isStandalone ? '—' : (d.margem ? d.margem + '%' : '—')}</td>
+      <td>${precoCell}</td>
       <td>${filBtn}</td>
       <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${fmtDate(d.data)}</td>
       <td style="color:var(--muted);font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(d.notas)}">${esc(d.notas) || '—'}</td>
       <td style="display:flex;gap:6px;align-items:center;">
         ${isDone && d.trabalho.vendaId
           ? `<span style="font-size:11px;color:var(--success);font-weight:600;">✓ Em vendas</span>`
-          : `<button class="btn btn-ghost btn-sm" onclick="editOrcamento(${d.id})">Editar</button>`
+          : d.isStandalone
+            ? `<button class="btn btn-ghost btn-sm" onclick="openNovoTrabalho(${d.id})">Editar</button>`
+            : `<button class="btn btn-ghost btn-sm" onclick="editOrcamento(${d.id})">Editar</button>`
         }
         ${getSession()?.nivel === 'Admin'
           ? `<button class="btn btn-ghost btn-sm" onclick="deleteTrabalho(${d.id})" style="color:var(--danger);padding:4px 8px;" title="Eliminar trabalho">✕</button>`
@@ -3573,32 +3663,56 @@ async function updateTrabalhoStatus(orcamentoId, newStatus) {
 
   // Auto-create venda when marked Concluído (only once)
   if (newStatus === 'Concluído' && !old.vendaId) {
-    const orc = DB.get('orcamentos').find(o => o.id === orcamentoId);
-    if (orc) {
-      const preco = parseFloat(orc.precoFinal) > 0 ? parseFloat(orc.precoFinal) : parseFloat(orc.preco) || 0;
-      const margem = parseFloat(orc.margem) || 0;
-      const custoUnit = margem < 100 ? parseFloat(orc.preco) / (1 + margem / 100) : 0;
-      const qtd = 1;
-      const custoTotal = custoUnit * qtd;
-      const receita = preco * qtd;
-      const lucro = receita - custoTotal;
-      const margemReal = receita > 0 ? (lucro / receita) * 100 : 0;
+    if (old.semOrcamento) {
+      // Standalone job — use its own price if set
+      const preco = parseFloat(old.preco);
+      if (preco > 0) {
+        const vendaId = Date.now();
+        const venda = {
+          id: vendaId,
+          data: new Date().toISOString().substring(0, 10),
+          produto: old.nome || '—',
+          categoria: 'Funcional',
+          material: old.material || 'PLA',
+          qtd: 1, custoUnit: 0, custoTotal: 0,
+          preco, receita: preco, lucro: preco, margem: 100,
+          cliente: old.cliente || '',
+          notas: old.notas || '',
+        };
+        await DB.upsert('vendas', venda);
+        updated.vendaId = vendaId;
+        showToast('✅ Trabalho concluído — venda criada automaticamente!');
+      } else {
+        showToast('✅ Trabalho concluído!');
+      }
+    } else {
+      const orc = DB.get('orcamentos').find(o => o.id === orcamentoId);
+      if (orc) {
+        const preco = parseFloat(orc.precoFinal) > 0 ? parseFloat(orc.precoFinal) : parseFloat(orc.preco) || 0;
+        const margem = parseFloat(orc.margem) || 0;
+        const custoUnit = margem < 100 ? parseFloat(orc.preco) / (1 + margem / 100) : 0;
+        const qtd = 1;
+        const custoTotal = custoUnit * qtd;
+        const receita = preco * qtd;
+        const lucro = receita - custoTotal;
+        const margemReal = receita > 0 ? (lucro / receita) * 100 : 0;
 
-      const vendaId = Date.now();
-      const venda = {
-        id: vendaId,
-        data: new Date().toISOString().substring(0, 10),
-        produto: orc.nome,
-        categoria: 'Funcional',
-        material: orc.material,
-        qtd, custoUnit, custoTotal, preco, receita, lucro,
-        margem: margemReal,
-        cliente: orc.cliente || '',
-        notas: orc.notas || '',
-      };
-      await DB.upsert('vendas', venda);
-      updated.vendaId = vendaId;
-      showToast('✅ Trabalho concluído — venda criada automaticamente!');
+        const vendaId = Date.now();
+        const venda = {
+          id: vendaId,
+          data: new Date().toISOString().substring(0, 10),
+          produto: orc.nome,
+          categoria: 'Funcional',
+          material: orc.material,
+          qtd, custoUnit, custoTotal, preco, receita, lucro,
+          margem: margemReal,
+          cliente: orc.cliente || '',
+          notas: orc.notas || '',
+        };
+        await DB.upsert('vendas', venda);
+        updated.vendaId = vendaId;
+        showToast('✅ Trabalho concluído — venda criada automaticamente!');
+      }
     }
   }
 
@@ -3637,6 +3751,74 @@ async function updateTrabalhoStatus(orcamentoId, newStatus) {
   renderDashboard();
 }
 
+// ===================== TRABALHO LIVRE (sem orçamento) =====================
+let _novoTrabalhoEdit = null; // null = create, orcamentoId (negative) = edit
+
+function openNovoTrabalho(orcamentoId = null) {
+  _novoTrabalhoEdit = orcamentoId;
+  const title = document.getElementById('novo-trabalho-modal-title');
+  if (orcamentoId !== null) {
+    const t = DB.get('trabalhos').find(t => t.orcamentoId === orcamentoId);
+    if (title) title.textContent = 'Editar Trabalho';
+    document.getElementById('nt-nome').value = t?.nome || '';
+    document.getElementById('nt-cliente').value = t?.cliente || '';
+    document.getElementById('nt-material').value = t?.material || 'PLA';
+    document.getElementById('nt-peso').value = t?.peso || '';
+    document.getElementById('nt-tempo').value = t?.tempo || '';
+    document.getElementById('nt-preco').value = t?.preco != null ? t.preco : '';
+    document.getElementById('nt-notas').value = t?.notas || '';
+  } else {
+    if (title) title.textContent = 'Novo Trabalho';
+    document.getElementById('nt-nome').value = '';
+    document.getElementById('nt-cliente').value = '';
+    document.getElementById('nt-material').value = 'PLA';
+    document.getElementById('nt-peso').value = '';
+    document.getElementById('nt-tempo').value = '';
+    document.getElementById('nt-preco').value = '';
+    document.getElementById('nt-notas').value = '';
+  }
+  openModal('modal-novo-trabalho');
+}
+
+async function saveNovoTrabalho() {
+  const nome = document.getElementById('nt-nome').value.trim();
+  if (!nome) { showToast('Preenche o nome da peça.'); return; }
+
+  const precoStr = document.getElementById('nt-preco').value.trim();
+  const preco = precoStr !== '' ? parseFloat(precoStr) : null;
+  const pesoStr = document.getElementById('nt-peso').value.trim();
+  const tempoStr = document.getElementById('nt-tempo').value.trim();
+
+  const existingId = _novoTrabalhoEdit !== null ? _novoTrabalhoEdit : -Date.now();
+  const existing = _novoTrabalhoEdit !== null ? DB.get('trabalhos').find(t => t.orcamentoId === _novoTrabalhoEdit) : null;
+
+  const entry = {
+    orcamentoId: existingId,
+    status: existing?.status || 'Para Imprimir',
+    vendaId: existing?.vendaId || null,
+    filamentosUsados: existing?.filamentosUsados || [],
+    nome,
+    cliente: document.getElementById('nt-cliente').value.trim() || null,
+    material: document.getElementById('nt-material').value || 'PLA',
+    peso: pesoStr !== '' ? parseFloat(pesoStr) : null,
+    tempo: tempoStr !== '' ? parseFloat(tempoStr) : null,
+    preco: preco != null && !isNaN(preco) ? preco : null,
+    notas: document.getElementById('nt-notas').value.trim() || null,
+    semOrcamento: true,
+    data: existing?.data || new Date().toISOString().substring(0, 10),
+  };
+
+  await DB.upsert('trabalhos', entry);
+  const cache = DB._cache['trabalhos'];
+  const idx = cache.findIndex(t => t.orcamentoId === entry.orcamentoId);
+  if (idx >= 0) cache[idx] = entry; else cache.push(entry);
+
+  closeModal('modal-novo-trabalho');
+  renderTrabalhos();
+  renderDashboard();
+  showToast(_novoTrabalhoEdit !== null ? 'Trabalho atualizado.' : 'Trabalho criado.');
+}
+
 function updateTrabalhosSummary(trabalhos) {
   const el = document.getElementById('trabalhos-summary');
   if (!el) return;
@@ -3663,7 +3845,13 @@ function openFilamentosModal(orcamentoId) {
   _trabFilModal.filamentos = JSON.parse(JSON.stringify(trab?.filamentosUsados || []));
 
   const subtitle = document.getElementById('trab-fil-subtitle');
-  if (subtitle && orc) subtitle.textContent = `Trabalho: ${orc.nome}${orc.cliente ? ' · ' + orc.cliente : ''}`;
+  if (subtitle) {
+    if (trab?.semOrcamento) {
+      subtitle.textContent = `Trabalho: ${trab.nome || '—'}${trab.cliente ? ' · ' + trab.cliente : ''}`;
+    } else if (orc) {
+      subtitle.textContent = `Trabalho: ${orc.nome}${orc.cliente ? ' · ' + orc.cliente : ''}`;
+    }
+  }
 
   // Populate filament select — show identities with total restante from bobines
   const sel = document.getElementById('trab-fil-select');
