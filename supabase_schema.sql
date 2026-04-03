@@ -191,27 +191,26 @@ create table if not exists public.utilizadores (
 
 -- ============================================================
 -- ROW LEVEL SECURITY
--- Esta app é uma ferramenta interna de utilizador único.
--- Permite todas as operações com a anon key.
+-- Apenas utilizadores autenticados via Supabase Auth têm acesso.
 -- ============================================================
 
-alter table public.orcamentos  enable row level security;
-alter table public.trabalhos   enable row level security;
-alter table public.vendas      enable row level security;
-alter table public.filamentos  enable row level security;
-alter table public.impressoras enable row level security;
-alter table public.catalogo    enable row level security;
+alter table public.orcamentos    enable row level security;
+alter table public.trabalhos     enable row level security;
+alter table public.vendas        enable row level security;
+alter table public.filamentos    enable row level security;
+alter table public.impressoras   enable row level security;
+alter table public.catalogo      enable row level security;
 alter table public.configuracoes enable row level security;
-alter table public.clientes    enable row level security;
-alter table public.utilizadores enable row level security;
+alter table public.clientes      enable row level security;
+alter table public.utilizadores  enable row level security;
 
--- Política: permitir tudo para utilizadores anónimos (ferramenta interna)
-create policy "Allow all orcamentos"   on public.orcamentos   for all using (true) with check (true);
-create policy "Allow all trabalhos"    on public.trabalhos    for all using (true) with check (true);
-create policy "Allow all vendas"       on public.vendas       for all using (true) with check (true);
-create policy "Allow all filamentos"   on public.filamentos   for all using (true) with check (true);
-create policy "Allow all impressoras"  on public.impressoras  for all using (true) with check (true);
-create policy "Allow all catalogo"     on public.catalogo     for all using (true) with check (true);
-create policy "Allow all configuracoes" on public.configuracoes for all using (true) with check (true);
-create policy "Allow all clientes"     on public.clientes     for all using (true) with check (true);
-create policy "Allow all utilizadores" on public.utilizadores for all using (true) with check (true);
+-- Política: só utilizadores autenticados (Supabase Auth)
+create policy "Auth only" on public.orcamentos    for all using (auth.uid() is not null) with check (auth.uid() is not null);
+create policy "Auth only" on public.trabalhos     for all using (auth.uid() is not null) with check (auth.uid() is not null);
+create policy "Auth only" on public.vendas        for all using (auth.uid() is not null) with check (auth.uid() is not null);
+create policy "Auth only" on public.filamentos    for all using (auth.uid() is not null) with check (auth.uid() is not null);
+create policy "Auth only" on public.impressoras   for all using (auth.uid() is not null) with check (auth.uid() is not null);
+create policy "Auth only" on public.catalogo      for all using (auth.uid() is not null) with check (auth.uid() is not null);
+create policy "Auth only" on public.configuracoes for all using (auth.uid() is not null) with check (auth.uid() is not null);
+create policy "Auth only" on public.clientes      for all using (auth.uid() is not null) with check (auth.uid() is not null);
+create policy "Auth only" on public.utilizadores  for all using (auth.uid() is not null) with check (auth.uid() is not null);

@@ -4821,17 +4821,28 @@ async function doLogin() {
   btn.disabled = true;
 
   try {
+    // Passo 1: autenticar no Supabase Auth
+    const { error: authError } = await _sb.auth.signInWithPassword({ email, password });
+    if (authError) {
+      errEl.textContent = 'Credenciais inválidas ou utilizador inativo.';
+      errEl.style.display = '';
+      btn.textContent = 'Entrar';
+      btn.disabled = false;
+      return;
+    }
+
+    // Passo 2: validar role e estado na tabela utilizadores
     const { data, error } = await _sb.from('utilizadores')
       .select('*')
       .eq('email', email)
-      .eq('password', password)
       .eq('ativo', 'Ativo')
       .maybeSingle();
 
     if (error) throw error;
 
     if (!data) {
-      errEl.textContent = 'Credenciais inválidas ou utilizador inativo.';
+      await _sb.auth.signOut();
+      errEl.textContent = 'Utilizador inativo ou sem acesso ao sistema.';
       errEl.style.display = '';
       btn.textContent = 'Entrar';
       btn.disabled = false;
@@ -4852,6 +4863,7 @@ async function doLogin() {
 }
 
 function doLogout() {
+  _sb.auth.signOut();
   clearSession();
   document.getElementById('logout-btn').style.display = 'none';
   document.getElementById('topbar-user').style.display = 'none';
@@ -4871,25 +4883,31 @@ async function loadAppData() {
 
 // ===================== INIT =====================
 async function initApp() {
-  // Load only utilizadores to validate session
-  try {
-    const { data } = await _sb.from('utilizadores').select('*');
-    DB._cache.utilizadores = (data || []).map(r => _maps.utilizadores.fromDb(r));
-  } catch (err) {
-    console.error('Supabase connect failed:', err);
-  }
+  // Verifica se existe sessão activa no Supabase Auth
+  const { data: { session: authSession } } = await _sb.auth.getSession();
 
   document.getElementById('app-loading').style.display = 'none';
 
-  const session = getSession();
-  if (session) {
-    // Verify session is still valid (user still active)
-    const user = DB._cache.utilizadores.find(u => u.id === session.id && u.email === session.email && u.ativo === 'Ativo');
-    if (user) {
-      showApp(session);
-      await loadAppData();
-      return;
+  if (authSession) {
+    // Sessão Auth válida — carrega utilizadores e valida role/estado
+    try {
+      const { data } = await _sb.from('utilizadores').select('*');
+      DB._cache.utilizadores = (data || []).map(r => _maps.utilizadores.fromDb(r));
+    } catch (err) {
+      console.error('Supabase connect failed:', err);
     }
+
+    const session = getSession();
+    if (session) {
+      const user = DB._cache.utilizadores.find(u => u.id === session.id && u.email === session.email && u.ativo === 'Ativo');
+      if (user) {
+        showApp(session);
+        await loadAppData();
+        return;
+      }
+    }
+    // Auth session existe mas sessão local inválida — limpa tudo
+    await _sb.auth.signOut();
     clearSession();
   }
 
