@@ -2723,7 +2723,7 @@ function renderOrcamentos() {
       <td>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-ghost btn-sm" onclick="editOrcamento(${o.id})">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="confirmDelete('orcamentos',${o.id})">✕</button>
+          ${o.estado !== 'Aceite' ? `<button class="btn btn-danger btn-sm" onclick="confirmDelete('orcamentos',${o.id})">✕</button>` : ''}
         </div>
       </td>
     </tr>
