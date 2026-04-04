@@ -103,6 +103,9 @@ create table if not exists public.filamentos (
 -- Migração: coluna bobines (gestão de bobines individuais por filamento)
 alter table public.filamentos add column if not exists bobines jsonb default '[]';
 
+-- Migração: referência única por filamento (ex: J3D-F0001)
+alter table public.filamentos add column if not exists referencia text;
+
 -- IMPRESSORAS (Impressoras 3D)
 create table if not exists public.impressoras (
   id            bigint primary key,

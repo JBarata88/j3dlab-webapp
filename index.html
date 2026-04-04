@@ -844,6 +844,7 @@
             <table>
               <thead>
                 <tr>
+                  <th>Referência</th>
                   <th>Material</th>
                   <th>Marca</th>
                   <th>Cor</th>
@@ -2820,8 +2821,21 @@ async function saveFilamento() {
   if (!marca) { showToast('⚠️ Insere a marca do filamento'); return; }
   if (!_filBobines.length) { showToast('⚠️ Adiciona pelo menos uma bobine'); return; }
 
+  const newId = editingId.filamento || Date.now();
+  // Gera referência apenas para filamentos novos
+  let referencia;
+  if (editingId.filamento) {
+    referencia = DB.get('filamentos').find(x => x.id === editingId.filamento)?.referencia;
+  }
+  if (!referencia) {
+    const existing = DB.get('filamentos').sort((a, b) => a.id - b.id);
+    const nextNum = existing.length + 1;
+    referencia = 'J3D-F' + String(nextNum).padStart(4, '0');
+  }
+
   const item = {
-    id: editingId.filamento || Date.now(),
+    id: newId,
+    referencia,
     marca, material,
     corNome: document.getElementById('fil-cor-nome').value,
     corHex: document.getElementById('fil-cor-hex').value,
@@ -2885,6 +2899,7 @@ function renderFilamentos() {
   const statusBadge = { 'Disponível': 'badge-success', 'Baixo Stock': 'badge-warning', 'Esgotado': 'badge-danger' };
 
   tbody.innerHTML = data.map(f => {
+    const ref = f.referencia || '—';
     const bobines = f.bobines || [];
     const pesoTotal = filGetPesoTotal(f);
     const pesoRestante = filGetPesoRestante(f);
@@ -2895,6 +2910,7 @@ function renderFilamentos() {
     const bobineBadgeColor = bobinesDisp === 0 ? 'var(--danger)' : bobinesDisp < bobinesTotal ? 'var(--warning)' : 'var(--success)';
     return `
       <tr>
+        <td style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.03em;">${ref}</td>
         <td><strong>${esc(f.material)}</strong></td>
         <td>${esc(f.marca)}</td>
         <td>
