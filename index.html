@@ -3376,6 +3376,7 @@ function renderDashboard() {
   const trabAtivos = trabalhos
     .filter(t => t.status === 'Para Imprimir' || t.status === 'Pendente')
     .map(t => ({ ...t, orc: orcamentos.find(o => o.id === t.orcamentoId) }))
+    .filter(t => t.orc || t.semOrcamento)
     .sort((a, b) => {
       const order = { 'Para Imprimir': 0, 'Pendente': 1 };
       const so = (order[a.status] || 0) - (order[b.status] || 0);
