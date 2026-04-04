@@ -3606,7 +3606,7 @@ function renderTrabalhos() {
             ? `<button class="btn btn-ghost btn-sm" onclick="openNovoTrabalho(${d.id})">Editar</button>`
             : `<button class="btn btn-ghost btn-sm" onclick="editOrcamento(${d.id})">Editar</button>`
         }
-        ${getSession()?.nivel === 'Admin'
+        ${getSession()?.nivel === 'Admin' && !isDone
           ? `<button class="btn btn-ghost btn-sm" onclick="deleteTrabalho(${d.id})" style="color:var(--danger);padding:4px 8px;" title="Eliminar trabalho">✕</button>`
           : ''
         }
