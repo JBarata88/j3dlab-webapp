@@ -2181,7 +2181,7 @@ const _maps = {
   },
   filamentos: {
     toDb: f => ({
-      id: f.id, marca: f.marca, material: f.material, cor_nome: f.corNome || null,
+      id: f.id, referencia: f.referencia || null, marca: f.marca, material: f.material, cor_nome: f.corNome || null,
       cor_hex: f.corHex || '#ffffff',
       bobines: JSON.stringify(f.bobines || []),
       // derived totals kept for backwards compat / SQL queries
@@ -2200,7 +2200,7 @@ const _maps = {
         bobines = [{ id: String(r.id) + '_legacy', pesoBobine: pt, pesoRestante: pr }];
       }
       return {
-        id: r.id, marca: r.marca, material: r.material || 'PLA', corNome: r.cor_nome || '',
+        id: r.id, referencia: r.referencia || null, marca: r.marca, material: r.material || 'PLA', corNome: r.cor_nome || '',
         corHex: r.cor_hex || '#ffffff', bobines,
         preco: r.preco?.toString() || '',
         diametro: r.diametro || '1.75mm', tempBico: r.temp_bico || '', tempCama: r.temp_cama || '',
