@@ -2717,7 +2717,7 @@ function renderOrcamentos() {
       <td><strong>${esc(o.cliente) || '<span style="color:var(--muted)">—</span>'}</strong></td>
       <td>${esc(o.nome)}</td>
       <td><span class="badge badge-neutral">${esc(o.material)}</span></td>
-      <td><strong style="color:var(--brand)">€${o.preco}</strong></td>
+      <td><strong style="color:var(--brand)">€${parseFloat(o.precoFinal) > 0 ? parseFloat(o.precoFinal).toFixed(2) : o.preco}</strong></td>
       <td><span class="badge ${statusBadge[o.estado] || 'badge-neutral'}">${o.estado}</span></td>
       <td style="color:var(--muted);font-size:12px;">${fmtDate(o.data)}</td>
       <td>
@@ -3287,7 +3287,7 @@ function renderDashboard() {
   const vendas = DB.get('vendas');
   const clientes = DB.get('clientes');
 
-  const totalReceita = orcamentos.filter(o => o.estado === 'Aceite').reduce((s, o) => s + parseFloat(o.preco || 0), 0);
+  const totalReceita = orcamentos.filter(o => o.estado === 'Aceite').reduce((s, o) => s + (parseFloat(o.precoFinal) > 0 ? parseFloat(o.precoFinal) : parseFloat(o.preco || 0)), 0);
   const orcAceites = orcamentos.filter(o => o.estado === 'Aceite').length;
   const filBaixo = filamentos.filter(f => { const t = filGetPesoTotal(f); return t > 0 && filGetPesoRestante(f) / t < 0.25; }).length;
   const impDisponiveis = impressoras.filter(i => i.estado === 'Disponível').length;
@@ -3342,7 +3342,7 @@ function renderDashboard() {
             <div style="font-size:11px;color:var(--muted);">${esc(o.cliente) || '—'} · ${fmtDate(o.data)}</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <strong style="color:var(--brand)">€${o.preco}</strong>
+            <strong style="color:var(--brand)">€${parseFloat(o.precoFinal) > 0 ? parseFloat(o.precoFinal).toFixed(2) : o.preco}</strong>
             <span class="badge ${statusBadge[o.estado] || 'badge-neutral'}" style="font-size:10px;">${o.estado}</span>
           </div>
         </div>
@@ -3394,7 +3394,7 @@ function renderDashboard() {
         const nome = t.orc ? t.orc.nome : t.nome;
         const cliente = t.orc ? t.orc.cliente : t.cliente;
         const data = t.orc ? t.orc.data : t.data;
-        const preco = t.orc ? t.orc.preco : t.preco;
+        const preco = t.orc ? (parseFloat(t.orc.precoFinal) > 0 ? parseFloat(t.orc.precoFinal) : t.orc.preco) : t.preco;
         return `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);">
             <div style="min-width:0;flex:1;">
@@ -3569,9 +3569,12 @@ function renderTrabalhos() {
       ? `<button class="btn btn-ghost btn-sm" onclick="openFilamentosModal(${d.id})" style="color:var(--brand);font-weight:600;">${fils.length} fil.</button>`
       : `<button class="btn btn-ghost btn-sm" onclick="openFilamentosModal(${d.id})" style="color:var(--muted);">+ Associar</button>`;
 
-    const precoCell = d.isStandalone
-      ? (d.preco != null ? `<strong style="color:var(--brand)">€${parseFloat(d.preco).toFixed(2)}</strong>` : `<span style="color:var(--muted);font-size:11px;">Sem preço</span>`)
-      : `<strong style="color:var(--brand)">€${d.preco}</strong>`;
+    const precoEfetivo = d.isStandalone
+      ? d.preco
+      : (parseFloat(d.precoFinal) > 0 ? parseFloat(d.precoFinal) : parseFloat(d.preco) || null);
+    const precoCell = precoEfetivo != null
+      ? `<strong style="color:var(--brand)">€${parseFloat(precoEfetivo).toFixed(2)}</strong>`
+      : `<span style="color:var(--muted);font-size:11px;">Sem preço</span>`;
 
     const nomeBadge = d.isStandalone
       ? `${esc(d.nome)} <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:rgba(255,107,43,0.12);color:var(--brand);font-weight:700;vertical-align:middle;">Livre</span>`
