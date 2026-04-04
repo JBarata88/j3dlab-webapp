@@ -3376,11 +3376,12 @@ function renderDashboard() {
   const trabAtivos = trabalhos
     .filter(t => t.status === 'Para Imprimir' || t.status === 'Pendente')
     .map(t => ({ ...t, orc: orcamentos.find(o => o.id === t.orcamentoId) }))
-    .filter(t => t.orc)
     .sort((a, b) => {
       const order = { 'Para Imprimir': 0, 'Pendente': 1 };
       const so = (order[a.status] || 0) - (order[b.status] || 0);
-      return so !== 0 ? so : new Date(b.orc.data) - new Date(a.orc.data);
+      const da = new Date((a.orc ? a.orc.data : a.data) || 0);
+      const db2 = new Date((b.orc ? b.orc.data : b.data) || 0);
+      return so !== 0 ? so : db2 - da;
     }).slice(0, 6);
   const trabStatusStyle = {
     'Para Imprimir': { badge: 'badge-brand', label: 'Por Imprimir' },
@@ -3389,14 +3390,18 @@ function renderDashboard() {
   document.getElementById('dash-trabalhos-ativos').innerHTML = trabAtivos.length
     ? trabAtivos.map(t => {
         const ss = trabStatusStyle[t.status] || { badge: 'badge-neutral', label: t.status };
+        const nome = t.orc ? t.orc.nome : t.nome;
+        const cliente = t.orc ? t.orc.cliente : t.cliente;
+        const data = t.orc ? t.orc.data : t.data;
+        const preco = t.orc ? t.orc.preco : t.preco;
         return `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);">
             <div style="min-width:0;flex:1;">
-              <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.orc.nome)}</div>
-              <div style="font-size:11px;color:var(--muted);">${esc(t.orc.cliente) || '—'} · ${fmtDate(t.orc.data)}</div>
+              <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(nome)}</div>
+              <div style="font-size:11px;color:var(--muted);">${esc(cliente) || '—'} · ${fmtDate(data)}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:10px;">
-              <strong style="color:var(--brand)">€${t.orc.preco}</strong>
+              ${preco != null ? `<strong style="color:var(--brand)">€${preco}</strong>` : ''}
               <span class="badge ${ss.badge}" style="font-size:10px;">${ss.label}</span>
             </div>
           </div>`;
