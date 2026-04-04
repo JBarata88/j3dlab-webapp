@@ -3670,50 +3670,58 @@ async function updateTrabalhoStatus(orcamentoId, newStatus) {
   // Auto-create venda when marked Concluído (only once)
   if (newStatus === 'Concluído' && !old.vendaId) {
     if (old.semOrcamento) {
-      // Standalone job — create venda always (even with price 0)
+      // Standalone job — only create venda if price > 0
       const preco = parseFloat(old.preco) || 0;
-      const vendaId = Date.now();
-      const venda = {
-        id: vendaId,
-        data: new Date().toISOString().substring(0, 10),
-        produto: old.nome || '—',
-        categoria: 'Funcional',
-        material: old.material || 'PLA',
-        qtd: 1, custoUnit: 0, custoTotal: 0,
-        preco, receita: preco, lucro: preco, margem: preco > 0 ? 100 : 0,
-        cliente: old.cliente || '',
-        notas: old.notas || '',
-      };
-      await DB.upsert('vendas', venda);
-      updated.vendaId = vendaId;
-      showToast('✅ Trabalho concluído — venda criada automaticamente!');
-    } else {
-      const orc = DB.get('orcamentos').find(o => o.id === orcamentoId);
-      if (orc) {
-        const preco = parseFloat(orc.precoFinal) > 0 ? parseFloat(orc.precoFinal) : parseFloat(orc.preco) || 0;
-        const margem = parseFloat(orc.margem) || 0;
-        const custoUnit = margem < 100 ? parseFloat(orc.preco) / (1 + margem / 100) : 0;
-        const qtd = 1;
-        const custoTotal = custoUnit * qtd;
-        const receita = preco * qtd;
-        const lucro = receita - custoTotal;
-        const margemReal = receita > 0 ? (lucro / receita) * 100 : 0;
-
+      if (preco > 0) {
         const vendaId = Date.now();
         const venda = {
           id: vendaId,
           data: new Date().toISOString().substring(0, 10),
-          produto: orc.nome,
+          produto: old.nome || '—',
           categoria: 'Funcional',
-          material: orc.material,
-          qtd, custoUnit, custoTotal, preco, receita, lucro,
-          margem: margemReal,
-          cliente: orc.cliente || '',
-          notas: orc.notas || '',
+          material: old.material || 'PLA',
+          qtd: 1, custoUnit: 0, custoTotal: 0,
+          preco, receita: preco, lucro: preco, margem: 100,
+          cliente: old.cliente || '',
+          notas: old.notas || '',
         };
         await DB.upsert('vendas', venda);
         updated.vendaId = vendaId;
         showToast('✅ Trabalho concluído — venda criada automaticamente!');
+      } else {
+        showToast('✅ Trabalho concluído!');
+      }
+    } else {
+      const orc = DB.get('orcamentos').find(o => o.id === orcamentoId);
+      if (orc) {
+        const preco = parseFloat(orc.precoFinal) > 0 ? parseFloat(orc.precoFinal) : parseFloat(orc.preco) || 0;
+        if (preco > 0) {
+          const margem = parseFloat(orc.margem) || 0;
+          const custoUnit = margem < 100 ? parseFloat(orc.preco) / (1 + margem / 100) : 0;
+          const qtd = 1;
+          const custoTotal = custoUnit * qtd;
+          const receita = preco * qtd;
+          const lucro = receita - custoTotal;
+          const margemReal = receita > 0 ? (lucro / receita) * 100 : 0;
+
+          const vendaId = Date.now();
+          const venda = {
+            id: vendaId,
+            data: new Date().toISOString().substring(0, 10),
+            produto: orc.nome,
+            categoria: 'Funcional',
+            material: orc.material,
+            qtd, custoUnit, custoTotal, preco, receita, lucro,
+            margem: margemReal,
+            cliente: orc.cliente || '',
+            notas: orc.notas || '',
+          };
+          await DB.upsert('vendas', venda);
+          updated.vendaId = vendaId;
+          showToast('✅ Trabalho concluído — venda criada automaticamente!');
+        } else {
+          showToast('✅ Trabalho concluído!');
+        }
       }
     }
   }
