@@ -1159,7 +1159,7 @@
               </li>
               <li style="display:flex;gap:10px;align-items:flex-start;">
                 <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">4</span>
-                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Quando o cliente aceitar, marca o estado como <strong style="color:var(--success);">Aceite</strong> — o orçamento passa automaticamente para <strong style="color:var(--text);">Trabalhos</strong>.</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Quando o cliente aceitar, marca o estado como <strong style="color:var(--success);">Aceite</strong> — o orçamento passa automaticamente para <strong style="color:var(--text);">Trabalhos</strong>. Orçamentos aceites <strong style="color:var(--text);">não podem ser eliminados</strong>.</span>
               </li>
             </ol>
           </div>
@@ -1179,7 +1179,7 @@
             <ol style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
               <li style="display:flex;gap:10px;align-items:flex-start;">
                 <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</span>
-                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Os trabalhos são criados automaticamente ao <strong style="color:var(--text);">aceitar um orçamento</strong>.</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Os trabalhos são criados automaticamente ao <strong style="color:var(--text);">aceitar um orçamento</strong> — ou diretamente em <strong style="color:var(--text);">Trabalhos → Novo Trabalho</strong>, sem precisar de orçamento.</span>
               </li>
               <li style="display:flex;gap:10px;align-items:flex-start;">
                 <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</span>
@@ -1188,13 +1188,13 @@
                   <ul style="list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:4px;">
                     <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Estado</strong> — Para Imprimir / Pendente / Concluído</span></li>
                     <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Materiais e pesos</strong> usados na impressão</span></li>
-                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Tempo e margem</strong> calculados do orçamento</span></li>
+                    <li style="display:flex;gap:6px;"><span style="color:var(--brand);font-size:11px;margin-top:3px;">▸</span><span><strong style="color:var(--text);">Preço acordado</strong> — opcional em trabalhos livres (badge <strong style="color:var(--brand);">Livre</strong>)</span></li>
                   </ul>
                 </div>
               </li>
               <li style="display:flex;gap:10px;align-items:flex-start;">
                 <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,107,43,0.15);color:var(--brand);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</span>
-                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Atualiza o estado conforme avança. Ao marcar como <strong style="color:var(--success);">Concluído</strong>, o peso do filamento é descontado do stock automaticamente.</span>
+                <span style="font-size:13px;color:var(--muted);line-height:1.5;">Atualiza o estado conforme avança. Ao marcar como <strong style="color:var(--success);">Concluído</strong>, o filamento é descontado do stock e, se houver preço, a venda é criada automaticamente. Trabalhos concluídos <strong style="color:var(--text);">não podem ser eliminados</strong>.</span>
               </li>
             </ol>
           </div>
@@ -1293,7 +1293,7 @@
                 <p style="font-size:11px;color:var(--muted);margin-top:1px;">Inventário de bobines</p>
               </div>
             </div>
-            <p style="font-size:13px;color:var(--muted);line-height:1.6;">Em <strong style="color:var(--text);">Filamentos</strong>, regista cada bobine com material, marca, cor, peso total e preço/kg. O stock é atualizado automaticamente quando um trabalho é concluído. O dashboard alerta quando o stock está baixo.</p>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6;">Em <strong style="color:var(--text);">Filamentos</strong>, regista cada tipo com material, marca, cor e preço/kg. O stock é gerido por <strong style="color:var(--text);">bobines individuais</strong> — cada bobine tem o seu tamanho (250g a 2kg) e peso restante. A tabela mostra bobines disponíveis/total. Ao concluir um trabalho, o peso é descontado da bobine correta automaticamente. O dashboard alerta quando alguma bobine está com stock baixo.</p>
           </div>
 
           <!-- Impressoras -->
