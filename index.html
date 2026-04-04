@@ -3670,27 +3670,23 @@ async function updateTrabalhoStatus(orcamentoId, newStatus) {
   // Auto-create venda when marked Concluído (only once)
   if (newStatus === 'Concluído' && !old.vendaId) {
     if (old.semOrcamento) {
-      // Standalone job — use its own price if set
-      const preco = parseFloat(old.preco);
-      if (preco > 0) {
-        const vendaId = Date.now();
-        const venda = {
-          id: vendaId,
-          data: new Date().toISOString().substring(0, 10),
-          produto: old.nome || '—',
-          categoria: 'Funcional',
-          material: old.material || 'PLA',
-          qtd: 1, custoUnit: 0, custoTotal: 0,
-          preco, receita: preco, lucro: preco, margem: 100,
-          cliente: old.cliente || '',
-          notas: old.notas || '',
-        };
-        await DB.upsert('vendas', venda);
-        updated.vendaId = vendaId;
-        showToast('✅ Trabalho concluído — venda criada automaticamente!');
-      } else {
-        showToast('✅ Trabalho concluído!');
-      }
+      // Standalone job — create venda always (even with price 0)
+      const preco = parseFloat(old.preco) || 0;
+      const vendaId = Date.now();
+      const venda = {
+        id: vendaId,
+        data: new Date().toISOString().substring(0, 10),
+        produto: old.nome || '—',
+        categoria: 'Funcional',
+        material: old.material || 'PLA',
+        qtd: 1, custoUnit: 0, custoTotal: 0,
+        preco, receita: preco, lucro: preco, margem: preco > 0 ? 100 : 0,
+        cliente: old.cliente || '',
+        notas: old.notas || '',
+      };
+      await DB.upsert('vendas', venda);
+      updated.vendaId = vendaId;
+      showToast('✅ Trabalho concluído — venda criada automaticamente!');
     } else {
       const orc = DB.get('orcamentos').find(o => o.id === orcamentoId);
       if (orc) {
